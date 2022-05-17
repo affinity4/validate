@@ -26,6 +26,15 @@ class Stub
     protected $int;
 
     /**
+     * float
+     * 
+     * @validation type(float, 2)
+     *
+     * @var float
+     */
+    protected $float;
+
+    /**
      * user_id
      * 
      * @validation type(int:cast)

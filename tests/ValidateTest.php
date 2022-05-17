@@ -19,11 +19,11 @@ final class ValidateTest extends TestCase
     /* ---------------------- */
 
     /**
-     * Data provider for testStringValidatorCapturesValidationErrors
+     * Data provider: Non String Values
      *
      * @return array
      */
-    private function dataProvider__testStringValidatorCapturesValidationErrors(): array
+    private function dataProvider__nonStringValues(): array
     {
         return [
             [true],
@@ -40,7 +40,7 @@ final class ValidateTest extends TestCase
     /**
      * Test string validator throws InvalidDataTypeException
      * 
-     * @dataProvider dataProvider__testStringValidatorCapturesValidationErrors
+     * @dataProvider dataProvider__nonStringValues
      *
      * @return void
      */
@@ -51,14 +51,11 @@ final class ValidateTest extends TestCase
         
         $class = get_class($Stub);
         $type = gettype($value);
-        $error_message = "Property $class::string must be of type string. Type $type detected";
+        $error_message = "Must be of type string";
+        $validation_errors = $Stub->getValidationErrors('string');
 
         $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
-        $this->assertContainsEquals(
-            $error_message, 
-            $Stub->getValidationErrors(),
-            "Error message '$error_message' not in validation errors array"
-        );
+        $this->assertEquals($error_message, $validation_errors[0]['error'], "Error message '$error_message' not in validation errors array");
     }
 
     /**
@@ -168,17 +165,10 @@ final class ValidateTest extends TestCase
     {
         $Stub = new Stub;
         $Stub->alnum = $value;
-
-        $class = get_class($Stub);
-        $property = 'alnum';
-        $error_message = "Property $class::$property must be alphanumeric (letters and numbers only). Value was $value";
+        $error_message = "Value must be alphanumeric (letters and numbers only)";
 
         $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
-        $this->assertContainsEquals(
-            $error_message, 
-            $Stub->getValidationErrors(),
-            "Error message '$error_message' not in validation errors array"
-        );
+        $this->assertEquals($error_message, $Stub->getValidationErrors('alnum')->first()->error);
     }
 
     /**
@@ -194,17 +184,10 @@ final class ValidateTest extends TestCase
     {
         $Stub = new Stub;
         $Stub->alphanum = $value;
-
-        $class = get_class($Stub);
-        $property = 'alphanum';
-        $error_message = "Property $class::$property must be alphanumeric (letters and numbers only). Value was $value";
+        $error_message = "Value must be alphanumeric (letters and numbers only)";
 
         $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
-        $this->assertContainsEquals(
-            $error_message,
-            $Stub->getValidationErrors(),
-            "Error message '$error_message' not in validation errors array"
-        );
+        $this->assertEquals($error_message, $Stub->getValidationErrors('alphanum')->first()->error);
     }
 
     /**
@@ -220,17 +203,10 @@ final class ValidateTest extends TestCase
     {
         $Stub = new Stub;
         $Stub->alphanumeric = $value;
-
-        $class = get_class($Stub);
-        $property = 'alphanumeric';
-        $error_message = "Property $class::$property must be alphanumeric (letters and numbers only). Value was $value";
+        $error_message = "Value must be alphanumeric (letters and numbers only)";
 
         $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
-        $this->assertContainsEquals(
-            $error_message, 
-            $Stub->getValidationErrors(),
-            "Error message '$error_message' not in validation errors array"
-        );
+        $this->assertEquals($error_message, $Stub->getValidationErrors('alphanumeric')->first()->error);
     }
 
     /**
@@ -300,19 +276,10 @@ final class ValidateTest extends TestCase
     {
         $Stub = new Stub;
         $Stub->int = $value;
-
-        $class = get_class($Stub);
-        $property = 'int';
-        $expected_type = 'int';
-        $type = gettype($value);
-        $error_message = "Property $class::$property must be of type $expected_type. Type $type detected";
+        $error_message = "Must be of type int";
 
         $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
-        $this->assertContainsEquals(
-            $error_message, 
-            $Stub->getValidationErrors(),
-            "Error message '$error_message' not in validation errors array"
-        );
+        $this->assertEquals($error_message, $Stub->getValidationErrors('int')->first()->error);
     }
 
     /**
@@ -375,18 +342,10 @@ final class ValidateTest extends TestCase
         $Stub = new Stub;
         $Stub->user_id = $value;
 
-        $class = get_class($Stub);
-        $property = 'user_id';
-        $expected_type = 'int';
-        $type = gettype($value);
-        $error_message = "Property $class::$property must be of type $expected_type. Type $type detected";
+        $error_message = "Must be of type int";
 
         $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
-        $this->assertContainsEquals(
-            $error_message,
-            $Stub->getValidationErrors(),
-            "Error message '$error_message' not in validation errors array"
-        );
+        $this->assertEquals($error_message, $Stub->getValidationErrors('user_id')->first()->error);
     }
 
     /**
@@ -414,17 +373,10 @@ final class ValidateTest extends TestCase
         $Stub = new Stub;
         $Stub->id = $value;
 
-        $class = get_class($Stub);
-        $property = 'id';
-        $error_message = "Property $class::$property must be unsigned (e.g. a positive integer or decimal number). Value was $value";
+        $error_message = "Value must be unsigned (a positive number)";
 
-        // ust be unsigned (e.g. a positive integer or decimal number). Value was
         $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
-        $this->assertContainsEquals(
-            $error_message,
-            $Stub->getValidationErrors(),
-            "Error message '$error_message' not in validation errors array"
-        );
+        $this->assertEquals($error_message, $Stub->getValidationErrors('id')->first()->error);
     }
 
     /**
@@ -461,33 +413,79 @@ final class ValidateTest extends TestCase
 
     public function testAddValidationRule()
     {
+        $password = 'password';
         $Stub = new Stub;
-        $Stub->addValidationRule('after.string:password', function(array $validation, string $value) use ($Stub) {
+        $Stub->addValidationRule("after.string:$password", function(array $validators, string $value) use ($Stub) {
             $min_length = 8;
             $length = strlen($value);
 
             if ($length < $min_length) {
-                $Stub->addValidationError("Password must be at least $min_length characters in length");
+                $Stub->addValidationError("Password must be at least $min_length characters in length", $value, $validators);
             }
 
             preg_match("/[A-Z]+/", $value, $matches);
             if (count($matches) < 1) {
-                $Stub->addValidationError("Password must have at least one capital letter");
+                $Stub->addValidationError("Password must have at least one capital letter", $value, $validators);
             }
 
             preg_match("/\d+/", $value, $matches);
             if (count($matches) < 1) {
-                $Stub->addValidationError("Password must have at least one number");
+                $Stub->addValidationError("Password must have at least one number", $value, $validators);
             }
 
             return $value;
         });
-        $Stub->password = '_';
+        $Stub->$password = '_';
 
-        $validation_errors = $Stub->getValidationErrors();
+        $PasswordValidationErrors = $Stub->getValidationErrors($password);
 
-        $this->assertContainsEquals("Password must be at least 8 characters in length", $validation_errors);
-        $this->assertContainsEquals("Password must have at least one capital letter", $validation_errors);
-        $this->assertContainsEquals("Password must have at least one number", $validation_errors);
+        $this->assertSame(3, $PasswordValidationErrors->count());
+        $this->assertSame("Password must be at least 8 characters in length", $PasswordValidationErrors->first()->error);
+        $this->assertSame("Password must have at least one capital letter", $PasswordValidationErrors->next()->error);
+        $this->assertSame("Password must have at least one number", $PasswordValidationErrors->next()->error);
+    }
+
+    /**
+     * Data provider: Non Float Values
+     *
+     * @return array
+     */
+    private function dataProvider__nonFloatValues(): array
+    {
+        return [
+            [true],
+            [false],
+            [1],
+            [0],
+            [-1],
+            ['1'],
+            ['-1'],
+            [new stdClass],
+            [function() {
+                return 1.00;
+            }]
+        ];
+    }
+
+    /**
+     * Test Float Validator Captures Validation Errors
+     *
+     * @dataProvider dataProvider__nonFloatValues
+     * 
+     * @param mixed $value
+     * @return void
+     */
+    public function testFloatValidatorCapturesValidationErrors(mixed $value): void
+    {
+        $float = 'float';
+
+        $Stub = new Stub;
+        $Stub->$float = $value;
+
+        $error_message = "Type must be $float";
+        $FloatValidationErrors = $Stub->getValidationErrors($float);
+
+        $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
+        $this->assertSame($error_message, $FloatValidationErrors->first()->error);
     }
 }

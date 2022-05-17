@@ -1,11 +1,7 @@
 <?php
 namespace Affinity4\Validate;
 
-use Affinity4\Validate\Exception\AlphaNumericException;
-use Affinity4\Validate\Exception\InvalidDataTypeException;
 use Affinity4\Validate\Exception\ValidationPropertyParserException;
-use Affinity4\Validate\Exception\UnsignedIntException;
-use Affinity4\Validate\Validator\TypeValidator;
 use \phpDocumentor\Reflection\DocBlockFactory;
 use \ReflectionClass;
 use Exception;
@@ -61,21 +57,25 @@ trait Validate
         $validations = $this->__validate__getValidations($ReflectionProperty);
             $validators = [];
             foreach ($validations as $validation) {
-                preg_match("/^type\((?P<type>int|string)(:(?P<validators>.*))?\)/mi", $validation, $matches);
+                preg_match("/^type\((?P<type>int|string|float)(:(?P<validators>.*))?(,\s*(?P<length>\d+))?\)/mi", $validation, $matches);
 
                 if (empty($matches)) {
                     throw new ValidationPropertyParserException("@validation property was not formatted correctly");
                 }
 
+                
+
                 $type = (array_key_exists('type', $matches)) ? $matches['type'] : '';
                 if (empty($type)) {
-                    throw new ValidationPropertyParserException("@validation error: Valid type not found");
+                    throw new ValidationPropertyParserException("@validation error: Valid type not provided");
                 }
 
                 $validators_list = (array_key_exists('validators', $matches)) ? $matches['validators'] : '';
                 $_validators = (trim($validators_list) !== '') ? explode('|', $validators_list) : [];
 
-                $validators[] = ['type' => $type, 'validators' => $_validators, '_' => $ReflectionProperty];
+                $length = (array_key_exists('length', $matches)) ? (int) $matches['length'] : null;
+
+                $validators[] = ['type' => $type, 'validators' => $_validators, 'length' => $length, '_ReflectionProperty' => $ReflectionProperty];
             }
 
             return $validators;
@@ -109,7 +109,7 @@ trait Validate
     {
         foreach ($validators as $validator) {
             if (!array_key_exists($validator['type'], $this->validation_rules)) {
-                throw new ValidationPropertyParserException("@validations error: Valid type not found in type() declaration");
+                throw new ValidationPropertyParserException("@validations error: Validator for type({$validator['type']}) not found in validation rules array. Please ensure a rule was added for this type using Validate->addValationRule()");
             }
             
             /* @var string */
@@ -146,85 +146,6 @@ trait Validate
         }
 
         return $value;
-    }
-
-    /**
-     * __validate__addValidationRules
-     *
-     * @return void
-     */
-    private function __validate__addValidationRules(): void
-    {
-        $this->addValidationRule('string', function(array $validator, mixed $value) {
-            if (!is_string($value)) {
-                $actual_type = gettype($value);
-                $this->addValidationError("Property {$validator['_']->class}::{$validator['_']->name} must be of type {$validator['type']}. Type $actual_type detected");
-            }
-
-            return $value;
-        });
-
-        $this->addValidationRule('before.string:cast', function(array $validator, mixed $value) {
-            if (gettype($value) === 'object') {
-                if (method_exists($value, '__toString')) {
-                    $value = (string) $value;
-                } else {
-                    if ($value instanceof \Closure || is_callable($value)) {
-                        try {
-                            $value = (string) $value();
-                        } catch(\Exception $e) {
-                            // Don't throw any errors
-                        }
-                    }
-                }
-            }
-
-            if (is_bool($value)) {
-                $value = (string) $value;
-            }
-
-            if (is_numeric($value)) {
-                $value = (string) $value;
-            }
-
-            return $value;
-        });
-
-        $this->addValidationRule('after.string:alnum|alphanum|alphanumeric', function(array $validator, string $value) {
-            if (!ctype_alnum($value)) {
-                $this->addValidationError("Property {$validator['_']->class}::{$validator['_']->name} must be alphanumeric (letters and numbers only). Value was $value");
-            }
-
-            return $value;
-        });
-
-        $this->addValidationRule('int', function(array $validator, mixed $value) {
-            if (is_string($value) || !is_int($value)) {
-                $actual_type = gettype($value);
-                $this->addValidationError("Property {$validator['_']->class}::{$validator['_']->name} must be of type {$validator['type']}. Type $actual_type detected");
-            }
-
-            return $value;
-        });
-
-        $this->addValidationRule('before.int:cast', function(array $validator, mixed $value) {
-            if (gettype($value) === 'string') {
-                $is_numeric = is_numeric($value);
-                if ($is_numeric) {
-                    $value = (int) $value;
-                }
-            }
-
-            return $value;
-        });
-
-        $this->addValidationRule('after.int:unsigned', function(array $validator, int $value) {
-            if (!(abs($value) === $value)) {
-                $this->addValidationError("Property {$validator['_']->class}::{$validator['_']->name} must be unsigned (e.g. a positive integer or decimal number). Value was $value");
-            }
-
-            return $value;
-        });
     }
 
     /**
@@ -265,6 +186,138 @@ trait Validate
         }
 
         $this->$property = $value;
+    }
+
+    /**
+     * __validate__addValidationRules
+     *
+     * @return void
+     */
+    private function __validate__addValidationRules(): void
+    {
+        /* ----------------------------------------
+         * string
+         * ----------------------------------------
+         */
+        $this->addValidationRule('string', function(array $validator, mixed $value) {
+            if (!is_string($value)) {
+                $expected_type = $validator['type'];
+                $this->addValidationError("Must be of type $expected_type", $value, $validator);
+            }
+
+            return $value;
+        });
+
+        /* ----------------------------------------
+         * before.string:cast
+         * ----------------------------------------
+         */
+        $this->addValidationRule('before.string:cast', function(array $validator, mixed $value) {
+            if (gettype($value) === 'object') {
+                if (method_exists($value, '__toString')) {
+                    $value = (string) $value;
+                } else {
+                    if ($value instanceof \Closure || is_callable($value)) {
+                        try {
+                            $value = (string) $value();
+                        } catch(\Exception $e) {
+                            // Don't throw any errors
+                        }
+                    }
+                }
+            }
+
+            if (is_bool($value)) {
+                $value = (string) $value;
+            }
+
+            if (is_numeric($value)) {
+                $value = (string) $value;
+            }
+
+            return $value;
+        });
+
+        /* ----------------------------------------
+         * after.string:alnum|alphanum|alphanumeric
+         * ----------------------------------------
+         */
+        $this->addValidationRule('after.string:alnum|alphanum|alphanumeric', function(array $validator, string $value) {
+            if (!ctype_alnum($value)) {
+                $this->addValidationError("Value must be alphanumeric (letters and numbers only)", $value, $validator);
+            }
+
+            return $value;
+        });
+
+        /* ----------------------------------------
+         * int
+         * ----------------------------------------
+         */
+        $this->addValidationRule('int', function(array $validator, mixed $value) {
+            if (is_string($value) || !is_int($value)) {
+                $expected_type = $validator['type'];
+                $this->addValidationError("Must be of type $expected_type", $value, $validator);
+            }
+
+            return $value;
+        });
+
+        /* ----------------------------------------
+         * before.int:cast
+         * ----------------------------------------
+         */
+        $this->addValidationRule('before.int:cast', function(array $validator, mixed $value) {
+            if (gettype($value) === 'string') {
+                $is_numeric = is_numeric($value);
+                if ($is_numeric) {
+                    $value = (int) $value;
+                }
+            }
+
+            return $value;
+        });
+
+        /* ----------------------------------------
+         * after.int:unsigned
+         * ----------------------------------------
+         */
+        $this->addValidationRule('after.int:unsigned', function(array $validator, int $value) {
+            if (!(abs($value) === $value)) {
+                $this->addValidationError("Value must be unsigned (a positive number)", $value, $validator);
+            }
+
+            $length = $validator['length'];
+            if ($length !== null) {
+                if ($value > $length) {
+                    $this->addValidationError("Max value is $length", $value, $validator);
+                }
+            }
+
+            return $value;
+        });
+
+        /* ----------------------------------------
+         * float
+         * ----------------------------------------
+         */
+        $this->addValidationRule('float', function(array $validators, mixed $value) {
+            if (!is_float($value)) {
+                $this->addValidationError("Type must be float", $value, $validators);
+            } else {
+                $length = $validators['length'];
+                $decimal_places = 'decimal_places';
+                $pattern = "/\d+\.(?P<$decimal_places>\d{$length})$/";
+                preg_match($pattern, $value, $matches);
+                if (array_key_exists($decimal_places, $matches)) {
+                    if ((int) $matches[$decimal_places] !== (int) $length) {
+                        $this->addValidationError("Must have exactly $length $decimal_places", $value, $validators);
+                    }    
+                }
+            }
+
+            return $value;
+        });
     }
 
     /**
@@ -325,7 +378,7 @@ trait Validate
      *
      * @return array
      */
-    public function getValidationRules(): array
+    private function getValidationRules(): array
     {
         return $this->validation_rules;
     }
@@ -337,19 +390,41 @@ trait Validate
      * 
      * @return void
      */
-    public function addValidationError(string $error): void
+    public function addValidationError(string $error, mixed $value, array $validator): void
     {
-        $this->validation_errors[] = $error;
+        $ReflectionProperty = $validator['_ReflectionProperty'];
+        $this->validation_errors[$ReflectionProperty->name][] = [
+            'class' => $ReflectionProperty->class,
+            'property' => $ReflectionProperty->name,
+            'value' => $value,
+            'error' => $error
+        ];
     }
 
     /**
      * Get Validation Errors
      *
-     * @return array
+     * @return \Affinity4\Validate\ValidationErrors|array
      */
-    public function getValidationErrors(): array
+    public function getValidationErrors(string $property = null): \Affinity4\Validate\ValidationErrors|array
     {
-        return $this->validation_errors;
+        if (!is_null($property)) {
+            if (!array_key_exists($property, $this->validation_errors)) {
+                $class = get_class($this);
+                throw new \Exception("No key '$property' in {$class}->getValidationErrors() array");
+            }
+
+            $ValidationErrors = new ValidationErrors($this->validation_errors[$property]);
+
+            return $ValidationErrors;
+        }
+
+        $ValidationErrors = [];
+        foreach ($this->validation_errors as $property => $validation_errors) {
+            $ValidationErrors[$property] = new ValidationErrors($validation_errors);
+        }
+
+        return $ValidationErrors;
     }
 
     /**
