@@ -1,5 +1,7 @@
 # Affinity4/Validate
 
+[![Affinity4](https://circleci.com/gh/affinity4/validate.svg?style=svg)](https://circleci.com/gh/affinity4/validate)
+
 Affinity4 Validate is a trait which can be added to any class to enable protected/private property validation.
 
 Once Affinity4 validate is added to a class, any private or protected property can have complex validation assiated by added the @validation docblock tag
