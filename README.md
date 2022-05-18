@@ -69,11 +69,11 @@ Affinity4 Validate use the __set magic method to validate each property which ha
 
 @validation strings have three parts:
 
-type(<type>:<validator>|<validator>)
+type($type:$validator|$validator)
 
-The <type> validation will happen first. This will be a straight forward check of the type (e.g. is_int is_string etc)
+The $type validation will happen first. This will be a straight forward check of the type (e.g. is_int is_string etc)
 
-The <validators> are a pipe separated list of validations to happen after the <type> validator, which the exception of cast, which is more like a before middleware to attempt to cast the value to the correct type before validation
+The $validators are a pipe separated list of validations to happen after the $type validator, which the exception of cast, which is more like a before middleware to attempt to cast the value to the correct type before validation
 
 ### String
 
