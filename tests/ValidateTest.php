@@ -734,4 +734,77 @@ final class ValidateTest extends TestCase
         $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() for type $type which $is_alpha");
         $this->assertCount(0, $Stub->getValidationErrors());
     }
+
+    /**
+     * Data Provider: Non-snakecase values
+     * 
+     * @returns array
+     */
+    private function dataProviderNonSnakeCaseValues(): array
+    {
+        return [
+            ["kebab-case"],
+            ["UPPER-KEBAB-CASE"],
+            ["COBOL-CASE"],
+            ["Camel_Snake_Case"],
+            ["UPPER_SNAKE_CASE"],
+            ["CONSTANT_CASE"],
+            ["Train-Case"],
+            ["camelCase"],
+            ["UPPERFLATCASE"],
+            ["flatcase"],
+            ["snake__case_with_too_many_underscores"],
+        ];
+    }
+    
+    /**
+     * Test: Snake Case Validator Captures Validation Errors
+     * 
+     * @dataProvider dataProviderNonSnakeCaseValues
+     *
+     * @param mixed $value
+     *
+     * @returns void
+     */
+    public function testSnakeCaseValdidatorCapturesValidationErrors(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->snakecase = $value;
+
+        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertSame(1, $Stub->getValidationErrors('snakecase')->count());
+        $this->assertSame("Value was not in snakecase (snake_case)", $Stub->getValidationErrors('snakecase')->first()->error);
+    }
+
+    /**
+     * Data Provider: Snake Case Values
+     * 
+     * @returns array
+     */
+    private function dataProviderSnakeCaseValues(): array
+    {
+        return [
+            ["snake_case"],
+            ["i_am_a_long_snake_case_string"],
+            ["i_am_a_long_snake_case_string_123"]
+        ];
+    }
+    
+    /**
+     * Test: Snakecase Validator Passes For valid snakecase values
+     * 
+     * @dataProvider dataProviderSnakeCaseValues
+     *
+     * @param mixed
+     *
+     * @returns void
+     */
+    public function testSnakecaseValidatorPassesForValidSnakecaseValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->snakecase = $value;
+
+        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertCount(0, $Stub->getValidationErrors());
+    }
 }

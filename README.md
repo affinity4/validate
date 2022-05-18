@@ -77,7 +77,7 @@ The $validators are a pipe separated list of validations to happen after the $ty
 
 ### String
 
-Validates property value is a string. 
+Validates property value is a string.
 NOTE: Integers will not pass this validation. Castable types (e.g. objects with __toString) will not pass this validation unless 'cast' is passed as a validator. See Cast section below
 
 123 = fail
@@ -89,7 +89,7 @@ NOTE: Integers will not pass this validation. Castable types (e.g. objects with 
 
 ## Int
 
-Validates property value is an integer. 
+Validates property value is an integer.
 NOTE: Numeric strings will not pass this validation. Castable types (e.g. a callable returning an int) will not pass this validation unless 'cast' is passed as a validator. See Cast section below
 
 '123' = fail
@@ -119,8 +119,7 @@ Valdiates a value is numeric
 
 ### Alpha
 
-**Strings only**
-
+**NOTE: Strings only**  
 Validates a string is alphabet characters only (no numbers or symbols)
 
 "123"       = fail
@@ -140,8 +139,7 @@ Validates a string is alphabet characters only (no numbers or symbols)
 
 ### Alnum/Alphanum/Alphanumeric
 
-**Strings only**
-
+**Strings only**  
 Validates a string contains only alphanumeric characters (numbers and letters only)
 
 i-am-not-alnum  = fail
@@ -155,7 +153,7 @@ iAmAlnum123     = pass
 
 ### Unsiged
 
-Validates an integer is a positive value, above 0 
+Validates an integer is a positive value, above 0
 
 -123    = fail
 123     = pass
@@ -164,14 +162,9 @@ Validates an integer is a positive value, above 0
 @validation type(int:unsigned)
 ```
 
-
-
-
-
 ### Cast
 
-**Strings and Integers**
-
+**Strings and Integers**  
 Will attempt to "cast" an invalid value to the correct type, if possible
 
 This will check if an object has a __toString method, or will attempt to retreive return values of callables as the desired type.
@@ -211,11 +204,11 @@ $Class->username = new User; // "user001";
 
 ### Match
 
-**String only**
-
+**String only**  
 Will match a vlaue based on the regex pattern provided
 
-**NOTES** 
+#### NOTES
+
 1. Do not wrap pattern in quotes
 2. Do not use regex delimiters. The default delimiter used internally is /. If you need to change this you should create a custom validation rule using the addValidationRule() method
 
@@ -240,12 +233,13 @@ protected $mobile;
 
 Will attempt to replace a matched pattern with a replacement string.
 
-NOTE:
+Notes:
+
 1. Do not qoute pattern or replace strings
-2. Do not use regex delimiters. The default delimiter used internally is /. If you need to change this you should create a custom validation rule using the addValidationRule() method
+1. Do not use regex delimiters. The default delimiter used internally is /. If you need to change this you should create a custom validation rule using the addValidationRule() method
 1. Uses preg_replace internally
 1. You *CANNOT* pass an array as the replacement value. Only strings are allowed
-1. You *CAN* use variable placeholders the same way as in preg_replace e.g. To encrypt a credit card number you would use replace((\d{4})\s*(\d{4})\s*(\d{4}), **** **** ${3}) // returns: **** **** 1234
+1. You *CAN* use variable placeholders the same way as in preg_replace e.g. To encrypt a credit card number you would use replace((\d{4})\s*(\d{4})\s*(\d{4}), \*\*\*\* \*\*\*\* ${3}) // returns: \*\*\*\* \*\*\*\* 1234
 
 ```php
 /**
@@ -265,9 +259,10 @@ protected $credit_card_number;
 Each group of errors is wrapped in the ValidationErrors class. This is to allow for easier accessing of specific errors and their keys than simply looping over the array of validation errors
 
 For example imaginae a property which has multiple validations, like a password with custom validation added.
+
 1. Validates the length must be greater than 8 characters
-2. Validates there is at lease one capital letter
-3. Validates there is at least one number
+1. Validates there is at lease one capital letter
+1. Validates there is at least one number
 
 Without the ValidationErrors class the validations would be grouped in an array like so:
 
@@ -345,10 +340,14 @@ $PasswordValidationErrors->first()->value; // 'password'
 ## TODO
 
 1. Add type(string:snakecase), type(string:kebabcase), type(string:camelcase), type(string:pascalcase), type(string:uppercase), type(string:lowercase)
+
+1. Add type(string:hex) validator. Validates string is a hexadecimal value. ctype_xdigit($value)
+1. Add type(string:no_whitespace) validator. Validates string has no whitespace (e.g. \r\n\t). !ctype_space($value) && ctype_print($value)
 1. Add to(snakecase), to(kebabcase), to(camelcase), to(pascalcase), to(uppercase), to(lowercase)
 1. Allow multiple validations to pass e.g. type(string:any(kebabcase, snakecase)). NOTE: validation "functions" (e.g. regex($pattern)) are not allowed inside any. Custom validators should instead be created using addValidationRule() and the name should be used inside any()
 1. Allow any() to be used to allow multiple valid types e.g. type(any(string,int,null)). NOTE: No additioanl validators can be used in this case e.g. type(any(string,null):cast|kebabcase) since allowing multiple types could complex validation scenarios with potentially unexpected results
-1. Add chaining/fluent interface 
+1. Add chaining/fluent interface  
+
     ```php
     @validation type(string:cast|kebabcase).to(snakecase) // Fails if not a string formatted as kebabcase. Otherwise converts kebabcase to snakecase (e.g. "i-am-a-kebab" to "i_am_a_kebab")
     // or

@@ -405,6 +405,20 @@ trait Validate
         });
 
         /* ----------------------------------------
+         * after.string:snakecase
+         * ----------------------------------------
+         */
+        $this->addValidationRule('after.string:snakecase', function(array $validators, mixed $value) {
+            preg_match('/^[a-z0-9]+(?:_[a-z0-9]+)+/', $value, $matches);
+
+            if (empty($matches)) {
+                $this->addValidationError("Value was not in snakecase (snake_case)", $value, $validators);
+            }
+
+            return $value;
+        });
+
+        /* ----------------------------------------
          * match($pattern)
          * ----------------------------------------
          */

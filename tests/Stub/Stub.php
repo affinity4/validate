@@ -149,6 +149,60 @@ class Stub
     protected $alpha;
 
     /**
+     * Snakecase
+     *
+     * @validation type(string:snakecase)
+     * 
+     * @var string
+     */
+    protected $snakecase;
+
+    /**
+     * Kebabcase
+     *
+     * @validation type(string:kebabcase)
+     * 
+     * @var string
+     */
+    protected $kebabcase;
+
+    /**
+     * Camelcase
+     *
+     * @validation type(string:camelcase)
+     * 
+     * @var string
+     */
+    protected $camelcase;
+
+    /**
+     * PascalCase
+     *
+     * @validation type(string:pascalcase)
+     * 
+     * @var string
+     */
+    protected $pascalcase;
+
+    /**
+     * StudlyCaps
+     *
+     * @validation type(string:studlycaps)
+     * 
+     * @var string
+     */
+    protected $studlycaps;
+
+    /**
+     * CamelCaps
+     *
+     * @validation type(string:camelcaps)
+     * 
+     * @var string
+     */
+    protected $camelcaps;
+
+    /**
      * Get ID
      *
      * @return integer
