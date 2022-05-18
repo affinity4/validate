@@ -52,30 +52,91 @@ trait Validate
         return $this->__validate__getValidationsFromValidationTags($ValidationTags);
     }
 
+    private function __validate__getTypeValidatorArray(string $validation, \ReflectionProperty $ReflectionProperty): array
+    {
+        preg_match("/^type\((?P<type>int|string|float)(:(?P<validators>.*))?(,\s*(?P<length>\d+))?\)/mi", $validation, $matches);
+
+        if (empty($matches)) {
+            throw new ValidationPropertyParserException("@validation property was not formatted correctly");
+        }
+
+        $type = (array_key_exists('type', $matches)) ? $matches['type'] : '';
+        if (empty($type)) {
+            throw new ValidationPropertyParserException("@validation error: Valid type not provided");
+        }
+
+        $length = (array_key_exists('length', $matches)) ? (int) $matches['length'] : null;
+
+        $validators_list = (array_key_exists('validators', $matches)) ? $matches['validators'] : '';
+        $_validators = (trim($validators_list) !== '') ? explode('|', $validators_list) : [];
+
+        return ['type' => $type, 'validators' => $_validators, 'length' => $length, '_ReflectionProperty' => $ReflectionProperty];
+    }
+
+    private function __validate__getMatchValidatorArray(string $validation, \ReflectionProperty $ReflectionProperty): array
+    {
+        preg_match("/^match\((?P<pattern>.*)\)/", $validation, $matches);
+
+        $pattern = (array_key_exists('pattern', $matches)) ? $matches['pattern'] : '';
+        if (empty($pattern)) {
+            throw new ValidationPropertyParserException("@validation match() has no regex pattern");
+        }
+
+        return [
+            'type' => 'match',
+            'validators' => [
+                'pattern' => $pattern
+            ], '_ReflectionProperty' => $ReflectionProperty
+        ];
+    }
+
+    private function __validate__getReplaceValidatorArray(string $validation, \ReflectionProperty $ReflectionProperty): array
+    {
+        preg_match("/^replace\((?P<pattern>.*),\s*(?P<replace>.*)\)/", $validation, $matches);
+
+        $pattern = (array_key_exists('pattern', $matches)) ? $matches['pattern'] : '';
+        if (empty($pattern)) {
+            throw new ValidationPropertyParserException("@validation match() has no regex pattern");
+        }
+
+        $replace = (array_key_exists('replace', $matches)) ? $matches['replace'] : '';
+        if (empty($replace)) {
+            throw new ValidationPropertyParserException("@validation match() has no replace string");
+        }
+
+        return [
+            'type' => 'replace',
+            'validators' => [
+                'pattern' => $pattern,
+                'replace' => $replace,
+            ], '_ReflectionProperty' => $ReflectionProperty
+        ];
+    }
+
     private function __validate__getValidators(\ReflectionProperty $ReflectionProperty): array
     {
         $validations = $this->__validate__getValidations($ReflectionProperty);
             $validators = [];
             foreach ($validations as $validation) {
-                preg_match("/^type\((?P<type>int|string|float)(:(?P<validators>.*))?(,\s*(?P<length>\d+))?\)/mi", $validation, $matches);
+                $valid_validation_types = "type|match|replace|any";
+                preg_match("/^(?P<validation_type>$valid_validation_types)\(/", $validation, $matches);
+                $validation_type = (array_key_exists('validation_type', $matches)) ? $matches['validation_type'] : null;
 
-                if (empty($matches)) {
-                    throw new ValidationPropertyParserException("@validation property was not formatted correctly");
+                // Here we are simply populating the $validators array which is what gets passed to the validation_rules callbacks as the first argument
+                switch($validation_type) {
+                    case 'type': 
+                        $validators[] = $this->__validate__getTypeValidatorArray($validation, $ReflectionProperty);
+                    break;
+                    case 'match':
+                        $validators[] = $this->__validate__getMatchValidatorArray($validation, $ReflectionProperty);
+                    break;
+                    case 'replace':
+                        $validators[] = $this->__validate__getReplaceValidatorArray($validation, $ReflectionProperty);
+                    break;
+                    default :
+                        throw new ValidationPropertyParserException("@validation property was not formatted correctly. Please ensure main validation function is one of $valid_validation_types");
+                    break;
                 }
-
-                
-
-                $type = (array_key_exists('type', $matches)) ? $matches['type'] : '';
-                if (empty($type)) {
-                    throw new ValidationPropertyParserException("@validation error: Valid type not provided");
-                }
-
-                $validators_list = (array_key_exists('validators', $matches)) ? $matches['validators'] : '';
-                $_validators = (trim($validators_list) !== '') ? explode('|', $validators_list) : [];
-
-                $length = (array_key_exists('length', $matches)) ? (int) $matches['length'] : null;
-
-                $validators[] = ['type' => $type, 'validators' => $_validators, 'length' => $length, '_ReflectionProperty' => $ReflectionProperty];
             }
 
             return $validators;
@@ -315,6 +376,33 @@ trait Validate
                     }    
                 }
             }
+
+            return $value;
+        });
+
+        /* ----------------------------------------
+         * match($pattern)
+         * ----------------------------------------
+         */
+        $this->addValidationRule('match', function(array $validators, string $value) {
+            $pattern = "/{$validators['validators']['pattern']}/";
+            preg_match($pattern, $value, $matches);
+
+            if (empty($matches)) {
+                $this->addValidationError("Value did not match pattern", $value, $validators);
+            }
+
+            return $value;
+        });
+
+        /* ----------------------------------------
+         * replace($pattern, $replace)
+         * ----------------------------------------
+         */
+        $this->addValidationRule('replace', function(array $validators, string $value) {
+            $pattern = "/{$validators['validators']['pattern']}/";
+            $replace = $validators['validators']['replace'];
+            $value = preg_replace($pattern, $replace, $value);
 
             return $value;
         });

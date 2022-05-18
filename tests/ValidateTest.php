@@ -4,11 +4,6 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use Test\Stub\Stub;
 
-function dd(mixed ...$args)
-{
-    die(print_r($args, true));
-}
-
 /**
  * TypeValidator Tests
  */
@@ -487,5 +482,91 @@ final class ValidateTest extends TestCase
 
         $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
         $this->assertSame($error_message, $FloatValidationErrors->first()->error);
+    }
+
+    /**
+     * DataProvider: Irish Mobile Numbers
+     *
+     * @return array
+     */
+    private function dataProvider__irishMobileNumbers(): array
+    {
+        return [
+            ["+3538123456789"],
+            ["003538123456789"],
+            ["+353 81 234 5678"],
+            ["00353 81 234 5678"],
+            ["+35381 234 5678"],
+            ["0035381 234 5678"],
+            ["+35381234 5678"],
+            ["0035381234 5678"],
+            ["08123456789"],
+            ["081 234 5678"],
+            ["081 234 5678"],
+            ["081234 5678"],
+        ];
+    }
+
+    /**
+     * Test Match Validator Passes for valid strings
+     *
+     * @dataProvider dataProvider__irishMobileNumbers
+     * 
+     * @param string $value
+     * 
+     * @return void
+     */
+    public function testMatchValidatorPassesForValidStrings(string $value): void
+    {
+        $Stub = new Stub;
+        $Stub->mobile = $value;
+
+        $this->assertTrue($Stub->isValid(), "match() validator failed to match correct Irish mobile number");
+    }
+
+    /**
+     * Data Provider: Invalid Irish Mobile Numbers
+     *
+     * @return array
+     */
+    private function dataProvider__invalidIrishMobileNumbers(): array
+    {
+        return [
+            ["+3530858482765"],
+            ["123 123 1234"]
+        ];
+    }
+
+    /**
+     * Test Match Validator Captures Validation Errors
+     * 
+     * @dataProvider dataProvider__invalidIrishMobileNumbers
+     *
+     * @param string $value
+     * @return void
+     */
+    public function testMatchValidatorCapturesValidationErrors(string $value): void
+    {
+        $Stub = new Stub;
+        $Stub->mobile = $value;
+
+        $error_message = "Value did not match pattern";
+        $FloatValidationErrors = $Stub->getValidationErrors('mobile');
+
+        $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
+        $this->assertSame($error_message, $FloatValidationErrors->first()->error);
+    }
+
+    /**
+     * Test Replace Correctly Replaces Matched String
+     *
+     * @return void
+     */
+    public function testReplaceCorrectlyReplacesMatchedString()
+    {
+        $Stub = new Stub;
+        $Stub->cleaned_curse_words = "a curse word";
+
+        $this->assertSame("a c&%!e word", $Stub->getCleanedCurseWords());
     }
 }

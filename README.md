@@ -166,6 +166,57 @@ class User {
 $Class->username = new User; // "user001";
 ```
 
+### Match
+
+**String only**
+
+Will match a vlaue based on the regex pattern provided
+
+**NOTES** 
+1. Do not wrap pattern in quotes
+2. Do not use regex delimiters. The default delimiter used internally is /. If you need to change this you should create a custom validation rule using the addValidationRule() method
+
+```php
+/**
+ * Mobile
+ * 
+ * Matches an Irish mobile number:
+ * +3538123456789
+ * 003538123456789
+ * +353 81 234 5678
+ * 00353 81 234 5678
+ * 
+ * @validation match(^(?:0|(?:00|\+)353)\s*8\d{1}\s*\d{3}\s*\d{4})
+ *
+ * @var string
+ */
+protected $mobile;
+```
+
+### Replace
+
+Will attempt to replace a matched pattern with a replacement string.
+
+NOTE:
+1. Do not qoute pattern or replace strings
+2. Do not use regex delimiters. The default delimiter used internally is /. If you need to change this you should create a custom validation rule using the addValidationRule() method
+1. Uses preg_replace internally
+1. You *CANNOT* pass an array as the replacement value. Only strings are allowed
+1. You *CAN* use variable placeholders the same way as in preg_replace e.g. To encrypt a credit card number you would use replace((\d{4})\s*(\d{4})\s*(\d{4}), **** **** ${3}) // returns: **** **** 1234
+
+```php
+/**
+ * Credit Card Number
+ * 
+ * Matches an a credit card number (e.g. 1234 1234 1234) and encrypts it (e.g **** **** 1234):
+ * 
+ * @validation replace((\d{4})\s*(\d{4})\s*(\d{4}), **** **** ${3})
+ *
+ * @var string
+ */
+protected $credit_card_number;
+```
+
 ## ValidationErrors Class
 
 Each group of errors is wrapped in the ValidationErrors class. This is to allow for easier accessing of specific errors and their keys than simply looping over the array of validation errors
@@ -250,10 +301,13 @@ $PasswordValidationErrors->first()->value; // 'password'
 
 ## TODO
 
-1. Add regex(/<pattern>/) to allow regex patterns to be used for validation
-3. Add type(string:snakecase), type(string:kebabcase), type(string:camelcase), type(string:pascalcase), type(string:uppercase), type(string:lowercase)
-4. Add to(snakecase), to(kebabcase), to(camelcase), to(pascalcase), to(uppercase), to(lowercase)
-5. Add chaining/fluent interface 
+1. Add numeric to check if a string is numeric
+1. Add alpha to check if a string is alphabet characters only
+1. Add type(string:snakecase), type(string:kebabcase), type(string:camelcase), type(string:pascalcase), type(string:uppercase), type(string:lowercase)
+1. Add to(snakecase), to(kebabcase), to(camelcase), to(pascalcase), to(uppercase), to(lowercase)
+1. Allow multiple validations to pass e.g. type(string:any(kebabcase, snakecase)). NOTE: validation "functions" (e.g. regex($pattern)) are not allowed inside any. Custom validators should instead be created using addValidationRule() and the name should be used inside any()
+1. Allow any() to be used to allow multiple valid types e.g. type(any(string,int,null)). NOTE: No additioanl validators can be used in this case e.g. type(any(string,null):cast|kebabcase) since allowing multiple types could complex validation scenarios with potentially unexpected results
+1. Add chaining/fluent interface 
     ```php
     @validation type(string:cast|kebabcase)->to(snakecase) // converts "i-am-a-kebab" to "i_am_a_kebab"
     //or

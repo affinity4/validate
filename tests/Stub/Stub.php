@@ -107,6 +107,30 @@ class Stub
     protected $alphanumeric;
 
     /**
+     * Mobile
+     * 
+     * Matches an Irish mobile number:
+     * +3538123456789
+     * 003538123456789
+     * +353 81 234 5678
+     * 00353 81 234 5678
+     * 
+     * @validation match(^(?:0|(?:00|\+)353)\s*8\d{1}\s*\d{3}\s*\d{4})
+     *
+     * @var string
+     */
+    protected $mobile;
+
+    /**
+     * Replace
+     * 
+     * Finds any "curse" and replaces the "urs" with "&%!"
+     * 
+     * @validation replace((c)(?:urs)(e), ${1}&%!${2})
+     */
+    protected $cleaned_curse_words;
+
+    /**
      * Get ID
      *
      * @return integer
@@ -154,6 +178,16 @@ class Stub
     public function getAlnum(): string
     {
         return $this->alnum;
+    }
+
+    /**
+     * Get Cleaned Curse Words
+     *
+     * @return string
+     */
+    public function getCleanedCurseWords(): string
+    {
+        return $this->cleaned_curse_words;
     }
 
     /**
