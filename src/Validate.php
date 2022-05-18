@@ -54,7 +54,7 @@ trait Validate
 
     private function __validate__getTypeValidatorArray(string $validation, \ReflectionProperty $ReflectionProperty): array
     {
-        preg_match("/^type\((?P<type>int|string|float)(:(?P<validators>.*))?(,\s*(?P<length>\d+))?\)/mi", $validation, $matches);
+        preg_match("/^type\((?P<type>int|string|float|numeric)(:(?P<validators>.*))?(,\s*(?P<length>\d+))?\)/mi", $validation, $matches);
 
         if (empty($matches)) {
             throw new ValidationPropertyParserException("@validation property was not formatted correctly");
@@ -375,6 +375,30 @@ trait Validate
                         $this->addValidationError("Must have exactly $length $decimal_places", $value, $validators);
                     }    
                 }
+            }
+
+            return $value;
+        });
+
+        /* ----------------------------------------
+         * numeric
+         * ----------------------------------------
+         */
+        $this->addValidationRule('numeric', function(array $validators, mixed $value) {
+            if (!is_numeric($value)) {
+                $this->addValidationError("Type must be numeric", $value, $validators);
+            }
+
+            return $value;
+        });
+
+        /* ----------------------------------------
+         * after.string:alpha
+         * ----------------------------------------
+         */
+        $this->addValidationRule('after.string:alpha', function(array $validators, mixed $value) {
+            if (!ctype_alpha($value)) {
+                $this->addValidationError("Type must be alphabet characters only", $value, $validators);
             }
 
             return $value;

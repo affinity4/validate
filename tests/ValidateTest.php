@@ -569,4 +569,169 @@ final class ValidateTest extends TestCase
 
         $this->assertSame("a c&%!e word", $Stub->getCleanedCurseWords());
     }
+
+    /**
+     * Data Provider: Numeric Values
+     *
+     * @return array
+     */
+    private function dataProvider__numericValues(): array
+    {
+        return [
+            ["42"],
+            [1337],
+            [02471],
+            ["02471"],
+            [9.1],
+            [1337e0],
+            ["1337e0"],
+            [0x539],
+            [0b10100111001]           
+        ];
+    }
+
+    /**
+     * Data Provider: Non-numeric Values
+     *
+     * @return array
+     */
+    private function dataProvider__nonNumericValues(): array
+    {
+        return [
+            ["0x539"],
+            ["not numeric"],
+            [array()],
+            [[]],
+            [null],
+            [true],
+            [false],
+            [new stdClass],
+            [''],
+            ["0b10100111001"],
+            [function() {
+                return 123;
+            }],
+        ];
+    }
+
+    /**
+     * Test Numeric Validator Captures Valdiation Errors For Non-Numeric Values
+     * 
+     * @dataProvider dataProvider__nonNumericValues
+     *
+     * @param mixed $value
+     * 
+     * @return void
+     */
+    public function testNumericValidatorCapturesValdiationErrorsForNonNumericValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->numeric = $value;
+        $type = gettype($value);
+        $is_numeric = (is_numeric($value)) ? 'is numeric' : 'is not numeric';
+
+        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() was false for type $type which $is_numeric");
+        $this->assertSame(1, $Stub->getValidationErrors('numeric')->count());
+        $this->assertSame("Type must be numeric", $Stub->getValidationErrors('numeric')->first()->error);
+    }
+
+    /**
+     * Test Numeric Validator is valid for numeric values
+     * 
+     * @dataProvider dataProvider__numericValues
+     *
+     * @param mixed $value
+     * 
+     * @return void
+     */
+    public function testNumericValidatorIsValidForNumericValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->numeric = $value;
+        $type = gettype($value);
+        $is_numeric = (is_numeric($value)) ? 'is numeric' : 'is not numeric';
+
+
+        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() for type $type which $is_numeric");
+        $this->assertCount(0, $Stub->getValidationErrors());
+    }
+
+    /**
+     * Data Provider: Alphabetical Values
+     *
+     * @return array
+     */
+    private function dataProvider__alphaValues(): array
+    {
+        return [
+            ["abcdefghijklmnopqrstuvwxyz"],
+            ["ABCDEFGHIJKLMNOPQRSTUVWXYZ"],
+            ["abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"]
+        ];
+    }
+
+    /**
+     * Data Provider: Non-alphabetical Values
+     *
+     * @return array
+     */
+    private function dataProvider__nonAlphaValues(): array
+    {
+        return [
+            ["1234567890"],
+            ["!\"£$%^&*()_+-={}[]:@;'~#<,>.?/|\\`¬"],
+            ["0x539"],
+            [''],
+            ["0b10100111001"]
+        ];
+    }
+
+    /**
+     * Test Alpha Validator Captures Valdiation Errors For Non-Alpha Values
+     * 
+     * @dataProvider dataProvider__nonAlphaValues
+     *
+     * @param mixed $value
+     * 
+     * @return void
+     */
+    public function testAlphaValidatorCapturesValdiationErrorsForNonAlphaValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->alpha = $value;
+        $type = gettype($value);
+        if ($type === 'string') {
+            preg_match("/[a-zA-Z]+/", $value, $matches);
+            $is_alpha = (!empty($matches)) ? 'is alpha' : 'is not alpha';
+        } else {
+            $is_alpha = 'is not alpha';
+        }
+        
+
+        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() was false for type $type which $is_alpha");
+        $this->assertSame(1, $Stub->getValidationErrors('alpha')->count());
+        $this->assertSame("Type must be alphabet characters only", $Stub->getValidationErrors('alpha')->first()->error);
+    }
+
+    /**
+     * Test Alpha Validator is valid for alphabetic values
+     * 
+     * @dataProvider dataProvider__alphaValues
+     *
+     * @param mixed $value
+     * 
+     * @return void
+     */
+    public function testAlphaValidatorIsValidForAlphaValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->alpha = $value;
+        $type = gettype($value);
+        preg_match("/[a-zA-Z]+/", $value, $matches);
+        $is_alpha = (!empty($matches)) ? 'is alpha' : 'is not alpha';
+
+
+        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() for type $type which $is_alpha");
+        $this->assertCount(0, $Stub->getValidationErrors());
+    }
 }

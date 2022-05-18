@@ -99,14 +99,53 @@ NOTE: Numeric strings will not pass this validation. Castable types (e.g. a call
 @validation type(int)
 ```
 
+### Numeric
+
+Valdiates a value is numeric
+
+"0x539" = fail
+"123"   = pass
+
+```php
+/**
+     * Numeric
+     *
+     * @validation type(numeric)
+     *
+     * @var numeric
+     */
+    protected $numeric;
+```
+
+### Alpha
+
+**Strings only**
+
+Validates a string is alphabet characters only (no numbers or symbols)
+
+"123"       = fail
+"alpha!"    = fail
+"abcDEF"    = pass
+
+```php
+/**
+     * Alpha
+     *
+     * @validation type(string:alpha)
+     *
+     * @var string
+     */
+    protected $alpha;
+```
+
 ### Alnum/Alphanum/Alphanumeric
 
 **Strings only**
 
 Validates a string contains only alphanumeric characters (numbers and letters only)
 
-i-am-not-alnum = fail
-iAmAlnum123 = pass
+i-am-not-alnum  = fail
+iAmAlnum123     = pass
 
 ```php
 @validation type(string:alnum)
@@ -118,12 +157,16 @@ iAmAlnum123 = pass
 
 Validates an integer is a positive value, above 0 
 
--123 = fail
-123 = pass
+-123    = fail
+123     = pass
 
 ```php
 @validation type(int:unsigned)
 ```
+
+
+
+
 
 ### Cast
 
@@ -301,15 +344,15 @@ $PasswordValidationErrors->first()->value; // 'password'
 
 ## TODO
 
-1. Add numeric to check if a string is numeric
-1. Add alpha to check if a string is alphabet characters only
 1. Add type(string:snakecase), type(string:kebabcase), type(string:camelcase), type(string:pascalcase), type(string:uppercase), type(string:lowercase)
 1. Add to(snakecase), to(kebabcase), to(camelcase), to(pascalcase), to(uppercase), to(lowercase)
 1. Allow multiple validations to pass e.g. type(string:any(kebabcase, snakecase)). NOTE: validation "functions" (e.g. regex($pattern)) are not allowed inside any. Custom validators should instead be created using addValidationRule() and the name should be used inside any()
 1. Allow any() to be used to allow multiple valid types e.g. type(any(string,int,null)). NOTE: No additioanl validators can be used in this case e.g. type(any(string,null):cast|kebabcase) since allowing multiple types could complex validation scenarios with potentially unexpected results
 1. Add chaining/fluent interface 
     ```php
-    @validation type(string:cast|kebabcase)->to(snakecase) // converts "i-am-a-kebab" to "i_am_a_kebab"
-    //or
-    @validation regex(/\s+/)->to(lowercase|snakecase) // converts "I am a sentence" to "i_am_a_sentence"
+    @validation type(string:cast|kebabcase).to(snakecase) // Fails if not a string formatted as kebabcase. Otherwise converts kebabcase to snakecase (e.g. "i-am-a-kebab" to "i_am_a_kebab")
+    // or
+    @validation match(\s+).to(lowercase|snakecase) // Fails if not a sentence (no spaces found). Otherwise, converts sentences to lowercase snakecase (e.g. "I Am A Title" to "i_am_a_title")
+    // or
+    @validation match(\d{4}\s*\s{4}\s*\d{4}).replace((\d{4})\s*(\d{4})\s*(\d{4}), **** **** ${3}) // Fails if not a credit card number. Otherwise, encrypts it (e.g. **** **** 1234)
     ```

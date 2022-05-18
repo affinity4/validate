@@ -131,6 +131,24 @@ class Stub
     protected $cleaned_curse_words;
 
     /**
+     * Numeric
+     *
+     * @validation type(numeric)
+     *
+     * @var numeric
+     */
+    protected $numeric;
+
+    /**
+     * Alpha
+     *
+     * @validation type(string:alpha)
+     *
+     * @var string
+     */
+    protected $alpha;
+
+    /**
      * Get ID
      *
      * @return integer
