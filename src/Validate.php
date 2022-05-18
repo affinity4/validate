@@ -419,6 +419,48 @@ trait Validate
         });
 
         /* ----------------------------------------
+         * after.string:constantcase|uppersnakecase|macrocase
+         * ----------------------------------------
+         */
+        $this->addValidationRule('after.string:constantcase|uppersnakecase|macrocase', function(array $validators, mixed $value) {
+            preg_match('/^[A-Z0-9]+(?:_[A-Z0-9]+)+/', $value, $matches);
+
+            if (empty($matches)) {
+                $this->addValidationError("Value was not in constantcase (CONSTANT_CASE)", $value, $validators);
+            }
+
+            return $value;
+        });
+
+        /* ----------------------------------------
+         * after.string:kebabcase
+         * ----------------------------------------
+         */
+        $this->addValidationRule('after.string:kebabcase', function(array $validators, mixed $value) {
+            preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)+/', $value, $matches);
+
+            if (empty($matches)) {
+                $this->addValidationError("Value was not in kebabcase (kebab-case)", $value, $validators);
+            }
+
+            return $value;
+        });
+
+        /* ----------------------------------------
+         * after.string:cobolcase|upperkebabcase
+         * ----------------------------------------
+         */
+        $this->addValidationRule('after.string:cobolcase|upperkebabcase', function(array $validators, mixed $value) {
+            preg_match('/^[A-Z0-9]+(?:-[A-Z0-9]+)+/', $value, $matches);
+
+            if (empty($matches)) {
+                $this->addValidationError("Value was not in cobol case (COBOL-CASE)", $value, $validators);
+            }
+
+            return $value;
+        });
+
+        /* ----------------------------------------
          * match($pattern)
          * ----------------------------------------
          */
@@ -467,7 +509,7 @@ trait Validate
                 if (count($type_and_name) < 2) {
                     throw new \Exception("A name was not provided for validation rule $pattern. Must have a name to identify validator e.g. before.string:password ('password' is the name of the validator)");
                 }
-    
+
                 $names = explode('|', $type_and_name[1]);
                 foreach ($names as $name) {
                     $this->validation_rules[$type][$when][$name] = $validation;           

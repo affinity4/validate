@@ -339,11 +339,32 @@ $PasswordValidationErrors->first()->value; // 'password'
 
 ## TODO
 
-1. Add type(string:snakecase), type(string:kebabcase), type(string:camelcase), type(string:pascalcase), type(string:uppercase), type(string:lowercase)
-
+1. Add type(string:camelcase)
+1. Add type(string:camelcaps)
+1. Add type(string:uppercase) aka camelcaps
+1. Add type(string:capitalcase) aka camelcaps
+1. Add type(string:pascalcase) PascalCase (aka CamelCaps)
+1. Add type(string:traincase) Train-Case
+1. Add type(string:uppercase)
+1. Add type(string:lowercase)
+1. Add type(string:flatcase)
+1. Add type(string:upperflatcase)
 1. Add type(string:hex) validator. Validates string is a hexadecimal value. ctype_xdigit($value)
 1. Add type(string:no_whitespace) validator. Validates string has no whitespace (e.g. \r\n\t). !ctype_space($value) && ctype_print($value)
-1. Add to(snakecase), to(kebabcase), to(camelcase), to(pascalcase), to(uppercase), to(lowercase)
+1. Add to(snakecase)
+1. Add to(kebabcase)
+1. Add to(constantcase) aka macrocase/uppersnakecase
+1. Add to(macrocase) aka constantcase/uppersnakecase
+1. Add to(uppersnakecase) aka constantcase/macrocase
+1. Add to(cobolcase) aka upperkebabcase
+1. Add to(upperkebabcase) aka cobolcase
+1. Add to(camelcase)
+1. Add to(camelcaps) aka pascalcase
+1. Add to(pascalcase) aka camelcaps
+1. Add to(uppercase)
+1. Add to(lowercase)
+1. Add to(flatcase)
+1. Add to(upperflatcase)
 1. Allow multiple validations to pass e.g. type(string:any(kebabcase, snakecase)). NOTE: validation "functions" (e.g. regex($pattern)) are not allowed inside any. Custom validators should instead be created using addValidationRule() and the name should be used inside any()
 1. Allow any() to be used to allow multiple valid types e.g. type(any(string,int,null)). NOTE: No additioanl validators can be used in this case e.g. type(any(string,null):cast|kebabcase) since allowing multiple types could complex validation scenarios with potentially unexpected results
 1. Add chaining/fluent interface  

@@ -158,6 +158,33 @@ class Stub
     protected $snakecase;
 
     /**
+     * Constant case
+     *
+     * @validation type(string:constantcase)
+     * 
+     * @var string
+     */
+    protected $constantcase;
+
+    /**
+     * Macro case
+     *
+     * @validation type(string:macrocase)
+     * 
+     * @var string
+     */
+    protected $macrocase;
+
+    /**
+     * Upper Snakecase
+     *
+     * @validation type(string:uppersnakecase)
+     * 
+     * @var string
+     */
+    protected $uppersnakecase;
+
+    /**
      * Kebabcase
      *
      * @validation type(string:kebabcase)
@@ -165,6 +192,24 @@ class Stub
      * @var string
      */
     protected $kebabcase;
+
+    /**
+     * Cobol Case
+     *
+     * @validation type(string:cobolcase)
+     * 
+     * @var string
+     */
+    protected $cobolcase;
+
+    /**
+     * Upper kebab case
+     *
+     * @validation type(string:upperkebabcase)
+     * 
+     * @var string
+     */
+    protected $upperkebabcase;
 
     /**
      * Camelcase
