@@ -46,11 +46,12 @@ final class ValidateTest extends TestCase
         
         $class = get_class($Stub);
         $type = gettype($value);
-        $error_message = "Must be of type string";
+        $error_message = "Value is not a string";
         $validation_errors = $Stub->getValidationErrors('string');
 
         $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
-        $this->assertEquals($error_message, $validation_errors[0]['error'], "Error message '$error_message' not in validation errors array");
+        $this->assertSame(1, $validation_errors->count());
+        $this->assertEquals($error_message, $validation_errors->first()->error, "Error message '$error_message' not in validation errors array");
     }
 
     /**
@@ -160,47 +161,13 @@ final class ValidateTest extends TestCase
     {
         $Stub = new Stub;
         $Stub->alnum = $value;
-        $error_message = "Value must be alphanumeric (letters and numbers only)";
+        $Stub->alphanum = $value;
+        $Stub->alphanumeric = $value;
+        $error_message = "Value is not alphanumeric (letters and numbers only)";
 
         $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
         $this->assertEquals($error_message, $Stub->getValidationErrors('alnum')->first()->error);
-    }
-
-    /**
-     * Test string validator with alphanumeric validator captures validation errors
-     * 
-     * @dataProvider dataProvider__nonAlphaNumericValues
-     *
-     * @param string $value
-     * 
-     * @return void
-     */
-    public function testStringValidatorWithAlphanumValidatorCapturesValidationErrors(string $value): void
-    {
-        $Stub = new Stub;
-        $Stub->alphanum = $value;
-        $error_message = "Value must be alphanumeric (letters and numbers only)";
-
-        $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
         $this->assertEquals($error_message, $Stub->getValidationErrors('alphanum')->first()->error);
-    }
-
-    /**
-     * Test string validator with alphanumeric validator captures validation errors
-     * 
-     * @dataProvider dataProvider__nonAlphaNumericValues
-     *
-     * @param string $value
-     * 
-     * @return void
-     */
-    public function testStringValidatorWithAlnumericValidatorCapturesValidationErrors(string $value): void
-    {
-        $Stub = new Stub;
-        $Stub->alphanumeric = $value;
-        $error_message = "Value must be alphanumeric (letters and numbers only)";
-
-        $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
         $this->assertEquals($error_message, $Stub->getValidationErrors('alphanumeric')->first()->error);
     }
 
@@ -271,7 +238,7 @@ final class ValidateTest extends TestCase
     {
         $Stub = new Stub;
         $Stub->int = $value;
-        $error_message = "Must be of type int";
+        $error_message = "Value is not an integer";
 
         $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
         $this->assertEquals($error_message, $Stub->getValidationErrors('int')->first()->error);
@@ -337,7 +304,7 @@ final class ValidateTest extends TestCase
         $Stub = new Stub;
         $Stub->user_id = $value;
 
-        $error_message = "Must be of type int";
+        $error_message = "Value is not an integer";
 
         $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
         $this->assertEquals($error_message, $Stub->getValidationErrors('user_id')->first()->error);
@@ -477,7 +444,7 @@ final class ValidateTest extends TestCase
         $Stub = new Stub;
         $Stub->$float = $value;
 
-        $error_message = "Type must be $float";
+        $error_message = "Value is not a $float";
         $FloatValidationErrors = $Stub->getValidationErrors($float);
 
         $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
@@ -550,7 +517,7 @@ final class ValidateTest extends TestCase
         $Stub = new Stub;
         $Stub->mobile = $value;
 
-        $error_message = "Value did not match pattern";
+        $error_message = "Value is not a match";
         $FloatValidationErrors = $Stub->getValidationErrors('mobile');
 
         $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
@@ -632,7 +599,7 @@ final class ValidateTest extends TestCase
 
         $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() was false for type $type which $is_numeric");
         $this->assertSame(1, $Stub->getValidationErrors('numeric')->count());
-        $this->assertSame("Type must be numeric", $Stub->getValidationErrors('numeric')->first()->error);
+        $this->assertSame("Value is not numeric", $Stub->getValidationErrors('numeric')->first()->error);
     }
 
     /**
@@ -710,7 +677,7 @@ final class ValidateTest extends TestCase
 
         $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() was false for type $type which $is_alpha");
         $this->assertSame(1, $Stub->getValidationErrors('alpha')->count());
-        $this->assertSame("Type must be alphabet characters only", $Stub->getValidationErrors('alpha')->first()->error);
+        $this->assertSame("Value must contain alphabet characters only", $Stub->getValidationErrors('alpha')->first()->error);
     }
 
     /**
@@ -773,7 +740,7 @@ final class ValidateTest extends TestCase
 
         $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
         $this->assertSame(1, $Stub->getValidationErrors('snakecase')->count());
-        $this->assertSame("Value was not in snakecase (snake_case)", $Stub->getValidationErrors('snakecase')->first()->error);
+        $this->assertSame("Value is not in snakecase (snake_case)", $Stub->getValidationErrors('snakecase')->first()->error);
     }
 
     /**
@@ -847,7 +814,7 @@ final class ValidateTest extends TestCase
 
         $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
         $this->assertSame(1, $Stub->getValidationErrors('kebabcase')->count());
-        $this->assertSame("Value was not in kebabcase (kebab-case)", $Stub->getValidationErrors('kebabcase')->first()->error);
+        $this->assertSame("Value is not in kebabcase (kebab-case)", $Stub->getValidationErrors('kebabcase')->first()->error);
     }
 
     /**
@@ -925,9 +892,9 @@ final class ValidateTest extends TestCase
         $this->assertSame(1, $Stub->getValidationErrors('uppersnakecase')->count());
         $this->assertSame(1, $Stub->getValidationErrors('macrocase')->count());
         
-        $this->assertSame("Value was not in constantcase (CONSTANT_CASE)", $Stub->getValidationErrors('constantcase')->first()->error);
-        $this->assertSame("Value was not in constantcase (CONSTANT_CASE)", $Stub->getValidationErrors('uppersnakecase')->first()->error);
-        $this->assertSame("Value was not in constantcase (CONSTANT_CASE)", $Stub->getValidationErrors('macrocase')->first()->error);
+        $this->assertSame("Value is not in constantcase (CONSTANT_CASE)", $Stub->getValidationErrors('constantcase')->first()->error);
+        $this->assertSame("Value is not in constantcase (CONSTANT_CASE)", $Stub->getValidationErrors('uppersnakecase')->first()->error);
+        $this->assertSame("Value is not in constantcase (CONSTANT_CASE)", $Stub->getValidationErrors('macrocase')->first()->error);
         
     }
 
@@ -1008,8 +975,8 @@ final class ValidateTest extends TestCase
         $this->assertSame(1, $Stub->getValidationErrors('upperkebabcase')->count());
         
         
-        $this->assertSame("Value was not in cobol case (COBOL-CASE)", $Stub->getValidationErrors('cobolcase')->first()->error);
-        $this->assertSame("Value was not in cobol case (COBOL-CASE)", $Stub->getValidationErrors('upperkebabcase')->first()->error);
+        $this->assertSame("Value is not in cobol case (COBOL-CASE)", $Stub->getValidationErrors('cobolcase')->first()->error);
+        $this->assertSame("Value is not in cobol case (COBOL-CASE)", $Stub->getValidationErrors('upperkebabcase')->first()->error);
         
     }
 

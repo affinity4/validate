@@ -436,7 +436,6 @@ $PasswordValidationErrors->first()->value; // 'password'
 
 ## TODO
 
-1. Add type(string:camelcaps)
 1. Add type(string:uppercase) aka camelcaps
 1. Add type(string:capitalcase) aka camelcaps
 1. Add type(string:traincase) Train-Case
