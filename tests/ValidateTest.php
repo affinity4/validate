@@ -9,9 +9,9 @@ use Test\Stub\Stub;
  */
 final class ValidateTest extends TestCase
 {
-    /* ---------------------- */
-    /*      String Tests      */
-    /* ---------------------- */
+    /* -------------------------------- */
+    /*      string Validator Tests      */
+    /* -------------------------------- */
 
     /**
      * Data provider: Non String Values
@@ -33,7 +33,7 @@ final class ValidateTest extends TestCase
     }
 
     /**
-     * Test string validator throws InvalidDataTypeException
+     * Test string validator Captures Validation Errors
      * 
      * @dataProvider dataProvider__nonStringValues
      *
@@ -95,6 +95,10 @@ final class ValidateTest extends TestCase
         $this->assertTrue($Stub->isValid());
     }
 
+    /* ------------------------------------- */
+    /*      string:cast Validator Tests      */
+    /* ------------------------------------- */
+
     /**
      * Data Provider for testCastValidatorCastsToString
      *
@@ -129,6 +133,10 @@ final class ValidateTest extends TestCase
 
         $this->assertTrue($Stub->isValid(), "Failed to assert ModelWithValidation->isValid() was true");
     }
+
+    /* --------------------------------------------- */
+    /*      string:alphanumeric Validator Tests      */
+    /* --------------------------------------------- */
 
     /**
      * Data Provider for Non AlphaNumeric Values
@@ -204,9 +212,669 @@ final class ValidateTest extends TestCase
         $this->assertTrue($Stub->isValid());
     }
 
-    /* ------------------- */
-    /*      Int Tests      */
-    /* ------------------- */
+    /* -------------------------------------- */
+    /*      string:alpha Validator Tests      */
+    /* -------------------------------------- */
+
+    /**
+     * Data Provider: Alphabetical Values
+     *
+     * @return array
+     */
+    private function dataProvider__alphaValues(): array
+    {
+        return [
+            ["abcdefghijklmnopqrstuvwxyz"],
+            ["ABCDEFGHIJKLMNOPQRSTUVWXYZ"],
+            ["abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"]
+        ];
+    }
+
+    /**
+     * Data Provider: Non-alphabetical Values
+     *
+     * @return array
+     */
+    private function dataProvider__nonAlphaValues(): array
+    {
+        return [
+            ["1234567890"],
+            ["!\"£$%^&*()_+-={}[]:@;'~#<,>.?/|\\`¬"],
+            ["0x539"],
+            [''],
+            ["0b10100111001"]
+        ];
+    }
+
+    /**
+     * Test Alpha Validator Captures Valdiation Errors For Non-Alpha Values
+     * 
+     * @dataProvider dataProvider__nonAlphaValues
+     *
+     * @param mixed $value
+     * 
+     * @return void
+     */
+    public function testAlphaValidatorCapturesValdiationErrorsForNonAlphaValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->alpha = $value;
+        $type = gettype($value);
+        if ($type === 'string') {
+            preg_match("/[a-zA-Z]+/", $value, $matches);
+            $is_alpha = (!empty($matches)) ? 'is alpha' : 'is not alpha';
+        } else {
+            $is_alpha = 'is not alpha';
+        }
+        
+
+        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() was false for type $type which $is_alpha");
+        $this->assertSame(1, $Stub->getValidationErrors('alpha')->count());
+        $this->assertSame("Value must contain alphabet characters only", $Stub->getValidationErrors('alpha')->first()->error);
+    }
+
+    /**
+     * Test Alpha Validator is valid for alphabetic values
+     * 
+     * @dataProvider dataProvider__alphaValues
+     *
+     * @param mixed $value
+     * 
+     * @return void
+     */
+    public function testAlphaValidatorIsValidForAlphaValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->alpha = $value;
+        $type = gettype($value);
+        preg_match("/[a-zA-Z]+/", $value, $matches);
+        $is_alpha = (!empty($matches)) ? 'is alpha' : 'is not alpha';
+
+
+        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() for type $type which $is_alpha");
+        $this->assertCount(0, $Stub->getValidationErrors());
+    }
+
+    /* ----------------------------------------- */
+    /*      string:snakecase Validator Tests     */
+    /* ----------------------------------------- */
+
+    /**
+     * Data Provider: Non-snakecase values
+     * 
+     * @returns array
+     */
+    private function dataProviderNonSnakeCaseValues(): array
+    {
+        return [
+            ["kebab-case"],
+            ["UPPER-KEBAB-CASE"],
+            ["COBOL-CASE"],
+            ["Camel_Snake_Case"],
+            ["UPPER_SNAKE_CASE"],
+            ["CONSTANT_CASE"],
+            ["Train-Case"],
+            ["camelCase"],
+            ["UPPERFLATCASE"],
+            ["flatcase"],
+            ["snake__case_with_too_many_underscores"],
+        ];
+    }
+    
+    /**
+     * Test: Snake Case Validator Captures Validation Errors
+     * 
+     * @dataProvider dataProviderNonSnakeCaseValues
+     *
+     * @param mixed $value
+     *
+     * @returns void
+     */
+    public function testSnakeCaseValdidatorCapturesValidationErrors(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->snakecase = $value;
+
+        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertSame(1, $Stub->getValidationErrors('snakecase')->count());
+        $this->assertSame("Value is not in snakecase (snake_case)", $Stub->getValidationErrors('snakecase')->first()->error);
+    }
+
+    /**
+     * Data Provider: Snake Case Values
+     * 
+     * @returns array
+     */
+    private function dataProviderSnakeCaseValues(): array
+    {
+        return [
+            ["snake_case"],
+            ["i_am_a_long_snake_case_string"],
+            ["i_am_a_long_snake_case_string_123"]
+        ];
+    }
+    
+    /**
+     * Test: Snakecase Validator Passes For valid snakecase values
+     * 
+     * @dataProvider dataProviderSnakeCaseValues
+     *
+     * @param mixed
+     *
+     * @returns void
+     */
+    public function testSnakecaseValidatorPassesForValidSnakecaseValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->snakecase = $value;
+
+        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertCount(0, $Stub->getValidationErrors());
+    }
+
+    /* ----------------------------------------- */
+    /*      string:kebabcase Validator Tests     */
+    /* ----------------------------------------- */
+
+    /**
+     * Data Provider: Non-kebabcase values
+     * 
+     * @returns array
+     */
+    private function dataProviderNonKebabCaseValues(): array
+    {
+        return [
+            ["snake_case"],
+            ["UPPER-KEBAB-CASE"],
+            ["COBOL-CASE"],
+            ["Camel_Snake_Case"],
+            ["UPPER_SNAKE_CASE"],
+            ["CONSTANT_CASE"],
+            ["Train-Case"],
+            ["camelCase"],
+            ["UPPERFLATCASE"],
+            ["flatcase"],
+            ["snake__case_with_too_many_underscores"],
+            ["kebab--case-with-too-many-underscores"],
+        ];
+    }
+    
+    /**
+     * Test: Kebab Case Validator Captures Validation Errors
+     * 
+     * @dataProvider dataProviderNonKebabCaseValues
+     *
+     * @param mixed $value
+     *
+     * @returns void
+     */
+    public function testKebabCaseValdidatorCapturesValidationErrors(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->kebabcase = $value;
+
+        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertSame(1, $Stub->getValidationErrors('kebabcase')->count());
+        $this->assertSame("Value is not in kebabcase (kebab-case)", $Stub->getValidationErrors('kebabcase')->first()->error);
+    }
+
+    /**
+     * Data Provider: Kebab Case Values
+     * 
+     * @returns array
+     */
+    private function dataProviderKebabCaseValues(): array
+    {
+        return [
+            ["kebab-case"],
+            ["i-am-a-long-kebab-case-string"],
+            ["i-am-a-long-snake-case-string-123"]
+        ];
+    }
+    
+    /**
+     * Test: Kebabcase Validator Passes For valid snakecase values
+     * 
+     * @dataProvider dataProviderKebabCaseValues
+     *
+     * @param mixed
+     *
+     * @returns void
+     */
+    public function testKebabcaseValidatorPassesForValidSnakecaseValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->kebabcase = $value;
+
+        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertCount(0, $Stub->getValidationErrors());
+    }
+
+    /* -------------------------------------------- */
+    /*      string:constantcase Validator Tests     */
+    /* -------------------------------------------- */
+
+    /**
+     * Data Provider: Non upper snakecase values
+     * 
+     * @returns array
+     */
+    private function dataProviderNonUpperSnakeCaseValues(): array
+    {
+        return [
+            ["kebab-case"],
+            ["UPPER-KEBAB-CASE"],
+            ["COBOL-CASE"],
+            ["Camel_Snake_Case"],
+            ["snake_case"],
+            ["Train-Case"],
+            ["camelCase"],
+            ["UPPERFLATCASE"],
+            ["flatcase"],
+            ["snake__case_with_too_many_underscores"],
+        ];
+    }
+    
+    /**
+     * Test: Upper Snake Case Validator Captures Validation Errors
+     * 
+     * @dataProvider dataProviderNonUpperSnakeCaseValues
+     *
+     * @param mixed $value
+     *
+     * @returns void
+     */
+    public function testUpperSnakeCaseValdidatorCapturesValidationErrors(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->uppersnakecase = $value;
+        $Stub->macrocase = $value;
+        $Stub->constantcase = $value;
+
+        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+
+        $this->assertSame(1, $Stub->getValidationErrors('constantcase')->count());
+        $this->assertSame(1, $Stub->getValidationErrors('uppersnakecase')->count());
+        $this->assertSame(1, $Stub->getValidationErrors('macrocase')->count());
+        
+        $this->assertSame("Value is not in constantcase (CONSTANT_CASE)", $Stub->getValidationErrors('constantcase')->first()->error);
+        $this->assertSame("Value is not in constantcase (CONSTANT_CASE)", $Stub->getValidationErrors('uppersnakecase')->first()->error);
+        $this->assertSame("Value is not in constantcase (CONSTANT_CASE)", $Stub->getValidationErrors('macrocase')->first()->error);
+        
+    }
+
+    /**
+     * Data Provider: Upper Snake Case Values
+     * 
+     * @returns array
+     */
+    private function dataProviderUpperSnakeCaseValues(): array
+    {
+        return [
+            ["UPPER_SNAKE_CASE"],
+            ["MACRO_CASE"],
+            ["CONSTANT_CASE"],
+            ["I_AM_A_LONG_UPPER_SNAKE_CASE_STRING"],
+            ["I_AM_A_LONG_UPPER_SNAKE_CASE_STRING_123"]
+        ];
+    }
+    
+    /**
+     * Test: Upper Snakecase Validators Passes For valid upper snakecase values
+     * 
+     * @dataProvider dataProviderUpperSnakeCaseValues
+     *
+     * @param mixed
+     *
+     * @returns void
+     */
+    public function testUpperSnakecaseValidatorsPassesForValidSnakecaseValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->uppersnakecase = $value;
+        $Stub->macrocase = $value;
+        $Stub->constantcase = $value;
+
+        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertCount(0, $Stub->getValidationErrors());
+    }
+
+    /* ----------------------------------------- */
+    /*      string:cobolcase Validator Tests     */
+    /* ----------------------------------------- */
+
+    /**
+     * Data Provider: Non Cobol case values
+     * 
+     * @returns array
+     */
+    private function dataProviderNonCobolCaseValues(): array
+    {
+        return [
+            ["kebab-case"],
+            ["Camel_Snake_Case"],
+            ["snake_case"],
+            ["Train-Case"],
+            ["camelCase"],
+            ["UPPERFLATCASE"],
+            ["flatcase"],
+            ["snake__case_with_too_many_underscores"],
+        ];
+    }
+    
+    /**
+     * Test: COBOL Case Validator Captures Validation Errors
+     * 
+     * @dataProvider dataProviderNonCobolCaseValues
+     *
+     * @param mixed $value
+     *
+     * @returns void
+     */
+    public function testCobolCaseValdidatorCapturesValidationErrors(mixed $value): void
+    {
+        $Stub = new Stub;
+        
+        $Stub->cobolcase = $value;
+        $Stub->upperkebabcase = $value;
+
+        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+
+        $this->assertSame(1, $Stub->getValidationErrors('cobolcase')->count());
+        $this->assertSame(1, $Stub->getValidationErrors('upperkebabcase')->count());
+        
+        
+        $this->assertSame("Value is not in cobol case (COBOL-CASE)", $Stub->getValidationErrors('cobolcase')->first()->error);
+        $this->assertSame("Value is not in cobol case (COBOL-CASE)", $Stub->getValidationErrors('upperkebabcase')->first()->error);
+        
+    }
+
+    /**
+     * Data Provider: Cobol Case Values
+     * 
+     * @returns array
+     */
+    private function dataProviderCobolCaseValues(): array
+    {
+        return [
+            ["UPPER-KEBAB-CASE"],
+            ["COBOL-CASE"],
+            ["COBOL-CASE-123"]
+        ];
+    }
+    
+    /**
+     * Test: Cobol Case Validators Passes For valid Cobol case values
+     * 
+     * @dataProvider dataProviderCobolCaseValues
+     *
+     * @param mixed
+     *
+     * @returns void
+     */
+    public function testCobolCaseValidatorsPassesForValidCobolcaseValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->cobolcase = $value;
+        $Stub->upperkebabcase = $value;
+
+        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertCount(0, $Stub->getValidationErrors());
+    }
+
+    /* ----------------------------------------- */
+    /*      string:camelcase Validator Tests     */
+    /* ----------------------------------------- */
+
+    /**
+     * Data Provider: Non Camel case values
+     * 
+     * @returns array
+     */
+    private function dataProviderNonCamelCaseValues(): array
+    {
+        return [
+            ["kebab-case"],
+            ["Camel_Snake_Case"],
+            ["snake_case"],
+            ["Train-Case"],
+            ["CamelCaps"],
+            ["UPPERFLATCASE"],
+            ["flatcase"],
+            ["snake__case_with_too_many_underscores"],
+        ];
+    }
+    
+    /**
+     * Test: Camel Case Validator Captures Validation Errors
+     * 
+     * @dataProvider dataProviderNonCamelCaseValues
+     *
+     * @param mixed $value
+     *
+     * @returns void
+     */
+    public function testCamelCaseValdidatorCapturesValidationErrors(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->camelcase = $value;
+
+        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertSame(1, $Stub->getValidationErrors('camelcase')->count());
+        
+        
+        $this->assertSame("Value is not in camel case (camelCase)", $Stub->getValidationErrors('camelcase')->first()->error);
+    }
+
+    /**
+     * Data Provider: Camel Case Values
+     * 
+     * @returns array
+     */
+    private function dataProviderCamelCaseValues(): array
+    {
+        return [
+            ["camelCase"],
+            ["testSomeMethod"],
+            ["reallyLongCamelCase"]
+        ];
+    }
+    
+    /**
+     * Test: Camel Case Validators Passes For valid Camel case values
+     * 
+     * @dataProvider dataProviderCamelCaseValues
+     *
+     * @param mixed
+     *
+     * @returns void
+     */
+    public function testCamelCaseValidatorsPassesForValidCobolcaseValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->camelcase = $value;
+
+        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertCount(0, $Stub->getValidationErrors());
+    }
+
+    /* ------------------------------------------ */
+    /*      string:pascalcase Validator Tests     */
+    /* ------------------------------------------ */
+
+    /**
+     * Data Provider: Non Pascal case values
+     * 
+     * @returns array
+     */
+    private function dataProviderNonPascalCaseValues(): array
+    {
+        return [
+            ["kebab-case"],
+            ["Camel_Snake_Case"],
+            ["snake_case"],
+            ["Train-Case"],
+            ["camelCaps"],
+            ["UPPERFLATCASE"],
+            ["flatcase"],
+            ["snake__case_with_too_many_underscores"],
+        ];
+    }
+    
+    /**
+     * Test: Pascal Case Validator Captures Validation Errors
+     * 
+     * @dataProvider dataProviderNonPascalCaseValues
+     *
+     * @param mixed $value
+     *
+     * @returns void
+     */
+    public function testPascalCaseValdidatorCapturesValidationErrors(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->pascalcase = $value;
+        $Stub->camelcaps = $value;
+        $Stub->studlycaps = $value;
+
+        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertSame(1, $Stub->getValidationErrors('pascalcase')->count());
+        $this->assertSame(1, $Stub->getValidationErrors('camelcaps')->count());
+        $this->assertSame(1, $Stub->getValidationErrors('studlycaps')->count());
+        
+        
+        $this->assertSame("Value is not in Pascal case (PascalCase)", $Stub->getValidationErrors('pascalcase')->first()->error);
+        $this->assertSame("Value is not in Pascal case (PascalCase)", $Stub->getValidationErrors('camelcaps')->first()->error);
+        $this->assertSame("Value is not in Pascal case (PascalCase)", $Stub->getValidationErrors('studlycaps')->first()->error);
+    }
+
+    /**
+     * Data Provider: Pascal Case Values
+     * 
+     * @returns array
+     */
+    private function dataProviderPascalCaseValues(): array
+    {
+        return [
+            ["PascalCase"],
+            ["ACatIsATerriblePet"],
+            ["ADogIs100TimesBetterThanACat"]
+        ];
+    }
+    
+    /**
+     * Test: Pascal Case Validators Passes For valid Pascal case values
+     * 
+     * @dataProvider dataProviderPascalCaseValues
+     *
+     * @param mixed
+     *
+     * @returns void
+     */
+    public function testPascalCaseValidatorsPassesForValidCobolcaseValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->pascalcase = $value;
+        $Stub->camelcaps = $value;
+        $Stub->studlycaps = $value;
+
+        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertCount(0, $Stub->getValidationErrors());
+    }
+
+    /* --------------------------------- */
+    /*      numeric Validator Tests      */
+    /* --------------------------------- */
+
+    /**
+     * Data Provider: Numeric Values
+     *
+     * @return array
+     */
+    private function dataProvider__numericValues(): array
+    {
+        return [
+            ["42"],
+            [1337],
+            [02471],
+            ["02471"],
+            [9.1],
+            [1337e0],
+            ["1337e0"],
+            [0x539],
+            [0b10100111001]           
+        ];
+    }
+
+    /**
+     * Data Provider: Non-numeric Values
+     *
+     * @return array
+     */
+    private function dataProvider__nonNumericValues(): array
+    {
+        return [
+            ["0x539"],
+            ["not numeric"],
+            [array()],
+            [[]],
+            [null],
+            [true],
+            [false],
+            [new stdClass],
+            [''],
+            ["0b10100111001"],
+            [function() {
+                return 123;
+            }],
+        ];
+    }
+
+    /**
+     * Test Numeric Validator Captures Valdiation Errors For Non-Numeric Values
+     * 
+     * @dataProvider dataProvider__nonNumericValues
+     *
+     * @param mixed $value
+     * 
+     * @return void
+     */
+    public function testNumericValidatorCapturesValdiationErrorsForNonNumericValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->numeric = $value;
+        $type = gettype($value);
+        $is_numeric = (is_numeric($value)) ? 'is numeric' : 'is not numeric';
+
+        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() was false for type $type which $is_numeric");
+        $this->assertSame(1, $Stub->getValidationErrors('numeric')->count());
+        $this->assertSame("Value is not numeric", $Stub->getValidationErrors('numeric')->first()->error);
+    }
+
+    /**
+     * Test Numeric Validator is valid for numeric values
+     * 
+     * @dataProvider dataProvider__numericValues
+     *
+     * @param mixed $value
+     * 
+     * @return void
+     */
+    public function testNumericValidatorIsValidForNumericValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->numeric = $value;
+        $type = gettype($value);
+        $is_numeric = (is_numeric($value)) ? 'is numeric' : 'is not numeric';
+
+
+        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() for type $type which $is_numeric");
+        $this->assertCount(0, $Stub->getValidationErrors());
+    }
+
+    /* ----------------------------- */
+    /*      Int Validator Tests      */
+    /* ----------------------------- */
 
     /**
      * Data provider for non integer values
@@ -373,6 +1041,17 @@ final class ValidateTest extends TestCase
         $this->assertTrue($Stub->isValid());
     }
 
+    /* ----------------------------------- */
+    /*      Add Validation Rule Tests      */
+    /* ----------------------------------- */
+
+    /**
+     * Test Add Validation Rule
+     * 
+     * @covers \Affinity4\Validate\Validate::addValidationRule
+     *
+     * @return void
+     */
     public function testAddValidationRule()
     {
         $password = 'password';
@@ -406,6 +1085,10 @@ final class ValidateTest extends TestCase
         $this->assertSame("Password must have at least one capital letter", $PasswordValidationErrors->next()->error);
         $this->assertSame("Password must have at least one number", $PasswordValidationErrors->next()->error);
     }
+
+    /* ------------------------------- */
+    /*      Float validator Tests      */
+    /* ------------------------------- */
 
     /**
      * Data provider: Non Float Values
@@ -450,6 +1133,10 @@ final class ValidateTest extends TestCase
         $this->assertFalse($Stub->isValid(), "Failed to assert {$Stub}->isValid() was false");
         $this->assertSame($error_message, $FloatValidationErrors->first()->error);
     }
+
+    /* ------------------------------- */
+    /*      Regex Validator Tests      */
+    /* ------------------------------- */
 
     /**
      * DataProvider: Irish Mobile Numbers
@@ -535,633 +1222,5 @@ final class ValidateTest extends TestCase
         $Stub->cleaned_curse_words = "a curse word";
 
         $this->assertSame("a c&%!e word", $Stub->getCleanedCurseWords());
-    }
-
-    /**
-     * Data Provider: Numeric Values
-     *
-     * @return array
-     */
-    private function dataProvider__numericValues(): array
-    {
-        return [
-            ["42"],
-            [1337],
-            [02471],
-            ["02471"],
-            [9.1],
-            [1337e0],
-            ["1337e0"],
-            [0x539],
-            [0b10100111001]           
-        ];
-    }
-
-    /**
-     * Data Provider: Non-numeric Values
-     *
-     * @return array
-     */
-    private function dataProvider__nonNumericValues(): array
-    {
-        return [
-            ["0x539"],
-            ["not numeric"],
-            [array()],
-            [[]],
-            [null],
-            [true],
-            [false],
-            [new stdClass],
-            [''],
-            ["0b10100111001"],
-            [function() {
-                return 123;
-            }],
-        ];
-    }
-
-    /**
-     * Test Numeric Validator Captures Valdiation Errors For Non-Numeric Values
-     * 
-     * @dataProvider dataProvider__nonNumericValues
-     *
-     * @param mixed $value
-     * 
-     * @return void
-     */
-    public function testNumericValidatorCapturesValdiationErrorsForNonNumericValues(mixed $value): void
-    {
-        $Stub = new Stub;
-        $Stub->numeric = $value;
-        $type = gettype($value);
-        $is_numeric = (is_numeric($value)) ? 'is numeric' : 'is not numeric';
-
-        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() was false for type $type which $is_numeric");
-        $this->assertSame(1, $Stub->getValidationErrors('numeric')->count());
-        $this->assertSame("Value is not numeric", $Stub->getValidationErrors('numeric')->first()->error);
-    }
-
-    /**
-     * Test Numeric Validator is valid for numeric values
-     * 
-     * @dataProvider dataProvider__numericValues
-     *
-     * @param mixed $value
-     * 
-     * @return void
-     */
-    public function testNumericValidatorIsValidForNumericValues(mixed $value): void
-    {
-        $Stub = new Stub;
-        $Stub->numeric = $value;
-        $type = gettype($value);
-        $is_numeric = (is_numeric($value)) ? 'is numeric' : 'is not numeric';
-
-
-        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() for type $type which $is_numeric");
-        $this->assertCount(0, $Stub->getValidationErrors());
-    }
-
-    /**
-     * Data Provider: Alphabetical Values
-     *
-     * @return array
-     */
-    private function dataProvider__alphaValues(): array
-    {
-        return [
-            ["abcdefghijklmnopqrstuvwxyz"],
-            ["ABCDEFGHIJKLMNOPQRSTUVWXYZ"],
-            ["abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"]
-        ];
-    }
-
-    /**
-     * Data Provider: Non-alphabetical Values
-     *
-     * @return array
-     */
-    private function dataProvider__nonAlphaValues(): array
-    {
-        return [
-            ["1234567890"],
-            ["!\"£$%^&*()_+-={}[]:@;'~#<,>.?/|\\`¬"],
-            ["0x539"],
-            [''],
-            ["0b10100111001"]
-        ];
-    }
-
-    /**
-     * Test Alpha Validator Captures Valdiation Errors For Non-Alpha Values
-     * 
-     * @dataProvider dataProvider__nonAlphaValues
-     *
-     * @param mixed $value
-     * 
-     * @return void
-     */
-    public function testAlphaValidatorCapturesValdiationErrorsForNonAlphaValues(mixed $value): void
-    {
-        $Stub = new Stub;
-        $Stub->alpha = $value;
-        $type = gettype($value);
-        if ($type === 'string') {
-            preg_match("/[a-zA-Z]+/", $value, $matches);
-            $is_alpha = (!empty($matches)) ? 'is alpha' : 'is not alpha';
-        } else {
-            $is_alpha = 'is not alpha';
-        }
-        
-
-        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() was false for type $type which $is_alpha");
-        $this->assertSame(1, $Stub->getValidationErrors('alpha')->count());
-        $this->assertSame("Value must contain alphabet characters only", $Stub->getValidationErrors('alpha')->first()->error);
-    }
-
-    /**
-     * Test Alpha Validator is valid for alphabetic values
-     * 
-     * @dataProvider dataProvider__alphaValues
-     *
-     * @param mixed $value
-     * 
-     * @return void
-     */
-    public function testAlphaValidatorIsValidForAlphaValues(mixed $value): void
-    {
-        $Stub = new Stub;
-        $Stub->alpha = $value;
-        $type = gettype($value);
-        preg_match("/[a-zA-Z]+/", $value, $matches);
-        $is_alpha = (!empty($matches)) ? 'is alpha' : 'is not alpha';
-
-
-        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() for type $type which $is_alpha");
-        $this->assertCount(0, $Stub->getValidationErrors());
-    }
-
-    /**
-     * Data Provider: Non-snakecase values
-     * 
-     * @returns array
-     */
-    private function dataProviderNonSnakeCaseValues(): array
-    {
-        return [
-            ["kebab-case"],
-            ["UPPER-KEBAB-CASE"],
-            ["COBOL-CASE"],
-            ["Camel_Snake_Case"],
-            ["UPPER_SNAKE_CASE"],
-            ["CONSTANT_CASE"],
-            ["Train-Case"],
-            ["camelCase"],
-            ["UPPERFLATCASE"],
-            ["flatcase"],
-            ["snake__case_with_too_many_underscores"],
-        ];
-    }
-    
-    /**
-     * Test: Snake Case Validator Captures Validation Errors
-     * 
-     * @dataProvider dataProviderNonSnakeCaseValues
-     *
-     * @param mixed $value
-     *
-     * @returns void
-     */
-    public function testSnakeCaseValdidatorCapturesValidationErrors(mixed $value): void
-    {
-        $Stub = new Stub;
-        $Stub->snakecase = $value;
-
-        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
-        $this->assertSame(1, $Stub->getValidationErrors('snakecase')->count());
-        $this->assertSame("Value is not in snakecase (snake_case)", $Stub->getValidationErrors('snakecase')->first()->error);
-    }
-
-    /**
-     * Data Provider: Snake Case Values
-     * 
-     * @returns array
-     */
-    private function dataProviderSnakeCaseValues(): array
-    {
-        return [
-            ["snake_case"],
-            ["i_am_a_long_snake_case_string"],
-            ["i_am_a_long_snake_case_string_123"]
-        ];
-    }
-    
-    /**
-     * Test: Snakecase Validator Passes For valid snakecase values
-     * 
-     * @dataProvider dataProviderSnakeCaseValues
-     *
-     * @param mixed
-     *
-     * @returns void
-     */
-    public function testSnakecaseValidatorPassesForValidSnakecaseValues(mixed $value): void
-    {
-        $Stub = new Stub;
-        $Stub->snakecase = $value;
-
-        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
-        $this->assertCount(0, $Stub->getValidationErrors());
-    }
-
-    /**
-     * Data Provider: Non-kebabcase values
-     * 
-     * @returns array
-     */
-    private function dataProviderNonKebabCaseValues(): array
-    {
-        return [
-            ["snake_case"],
-            ["UPPER-KEBAB-CASE"],
-            ["COBOL-CASE"],
-            ["Camel_Snake_Case"],
-            ["UPPER_SNAKE_CASE"],
-            ["CONSTANT_CASE"],
-            ["Train-Case"],
-            ["camelCase"],
-            ["UPPERFLATCASE"],
-            ["flatcase"],
-            ["snake__case_with_too_many_underscores"],
-            ["kebab--case-with-too-many-underscores"],
-        ];
-    }
-    
-    /**
-     * Test: Snake Case Validator Captures Validation Errors
-     * 
-     * @dataProvider dataProviderNonKebabCaseValues
-     *
-     * @param mixed $value
-     *
-     * @returns void
-     */
-    public function testKebabCaseValdidatorCapturesValidationErrors(mixed $value): void
-    {
-        $Stub = new Stub;
-        $Stub->kebabcase = $value;
-
-        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
-        $this->assertSame(1, $Stub->getValidationErrors('kebabcase')->count());
-        $this->assertSame("Value is not in kebabcase (kebab-case)", $Stub->getValidationErrors('kebabcase')->first()->error);
-    }
-
-    /**
-     * Data Provider: Kebab Case Values
-     * 
-     * @returns array
-     */
-    private function dataProviderKebabCaseValues(): array
-    {
-        return [
-            ["kebab-case"],
-            ["i-am-a-long-kebab-case-string"],
-            ["i-am-a-long-snake-case-string-123"]
-        ];
-    }
-    
-    /**
-     * Test: Kebabcase Validator Passes For valid snakecase values
-     * 
-     * @dataProvider dataProviderKebabCaseValues
-     *
-     * @param mixed
-     *
-     * @returns void
-     */
-    public function testKebabcaseValidatorPassesForValidSnakecaseValues(mixed $value): void
-    {
-        $Stub = new Stub;
-        $Stub->kebabcase = $value;
-
-        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
-        $this->assertCount(0, $Stub->getValidationErrors());
-    }
-
-    /**
-     * Data Provider: Non upper snakecase values
-     * 
-     * @returns array
-     */
-    private function dataProviderNonUpperSnakeCaseValues(): array
-    {
-        return [
-            ["kebab-case"],
-            ["UPPER-KEBAB-CASE"],
-            ["COBOL-CASE"],
-            ["Camel_Snake_Case"],
-            ["snake_case"],
-            ["Train-Case"],
-            ["camelCase"],
-            ["UPPERFLATCASE"],
-            ["flatcase"],
-            ["snake__case_with_too_many_underscores"],
-        ];
-    }
-    
-    /**
-     * Test: Upper Snake Case Validator Captures Validation Errors
-     * 
-     * @dataProvider dataProviderNonUpperSnakeCaseValues
-     *
-     * @param mixed $value
-     *
-     * @returns void
-     */
-    public function testUpperSnakeCaseValdidatorCapturesValidationErrors(mixed $value): void
-    {
-        $Stub = new Stub;
-        $Stub->uppersnakecase = $value;
-        $Stub->macrocase = $value;
-        $Stub->constantcase = $value;
-
-        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
-
-        $this->assertSame(1, $Stub->getValidationErrors('constantcase')->count());
-        $this->assertSame(1, $Stub->getValidationErrors('uppersnakecase')->count());
-        $this->assertSame(1, $Stub->getValidationErrors('macrocase')->count());
-        
-        $this->assertSame("Value is not in constantcase (CONSTANT_CASE)", $Stub->getValidationErrors('constantcase')->first()->error);
-        $this->assertSame("Value is not in constantcase (CONSTANT_CASE)", $Stub->getValidationErrors('uppersnakecase')->first()->error);
-        $this->assertSame("Value is not in constantcase (CONSTANT_CASE)", $Stub->getValidationErrors('macrocase')->first()->error);
-        
-    }
-
-    /**
-     * Data Provider: Upper Snake Case Values
-     * 
-     * @returns array
-     */
-    private function dataProviderUpperSnakeCaseValues(): array
-    {
-        return [
-            ["UPPER_SNAKE_CASE"],
-            ["MACRO_CASE"],
-            ["CONSTANT_CASE"],
-            ["I_AM_A_LONG_UPPER_SNAKE_CASE_STRING"],
-            ["I_AM_A_LONG_UPPER_SNAKE_CASE_STRING_123"]
-        ];
-    }
-    
-    /**
-     * Test: Upper Snakecase Validators Passes For valid upper snakecase values
-     * 
-     * @dataProvider dataProviderUpperSnakeCaseValues
-     *
-     * @param mixed
-     *
-     * @returns void
-     */
-    public function testUpperSnakecaseValidatorsPassesForValidSnakecaseValues(mixed $value): void
-    {
-        $Stub = new Stub;
-        $Stub->uppersnakecase = $value;
-        $Stub->macrocase = $value;
-        $Stub->constantcase = $value;
-
-        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
-        $this->assertCount(0, $Stub->getValidationErrors());
-    }
-
-    /**
-     * Data Provider: Non Cobol case values
-     * 
-     * @returns array
-     */
-    private function dataProviderNonCobolCaseValues(): array
-    {
-        return [
-            ["kebab-case"],
-            ["Camel_Snake_Case"],
-            ["snake_case"],
-            ["Train-Case"],
-            ["camelCase"],
-            ["UPPERFLATCASE"],
-            ["flatcase"],
-            ["snake__case_with_too_many_underscores"],
-        ];
-    }
-    
-    /**
-     * Test: COBOL Case Validator Captures Validation Errors
-     * 
-     * @dataProvider dataProviderNonCobolCaseValues
-     *
-     * @param mixed $value
-     *
-     * @returns void
-     */
-    public function testCobolCaseValdidatorCapturesValidationErrors(mixed $value): void
-    {
-        $Stub = new Stub;
-        
-        $Stub->cobolcase = $value;
-        $Stub->upperkebabcase = $value;
-
-        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
-
-        $this->assertSame(1, $Stub->getValidationErrors('cobolcase')->count());
-        $this->assertSame(1, $Stub->getValidationErrors('upperkebabcase')->count());
-        
-        
-        $this->assertSame("Value is not in cobol case (COBOL-CASE)", $Stub->getValidationErrors('cobolcase')->first()->error);
-        $this->assertSame("Value is not in cobol case (COBOL-CASE)", $Stub->getValidationErrors('upperkebabcase')->first()->error);
-        
-    }
-
-    /**
-     * Data Provider: Cobol Case Values
-     * 
-     * @returns array
-     */
-    private function dataProviderCobolCaseValues(): array
-    {
-        return [
-            ["UPPER-KEBAB-CASE"],
-            ["COBOL-CASE"],
-            ["COBOL-CASE-123"]
-        ];
-    }
-    
-    /**
-     * Test: Cobol Case Validators Passes For valid Cobol case values
-     * 
-     * @dataProvider dataProviderCobolCaseValues
-     *
-     * @param mixed
-     *
-     * @returns void
-     */
-    public function testCobolCaseValidatorsPassesForValidCobolcaseValues(mixed $value): void
-    {
-        $Stub = new Stub;
-        $Stub->cobolcase = $value;
-        $Stub->upperkebabcase = $value;
-
-        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
-        $this->assertCount(0, $Stub->getValidationErrors());
-    }
-
-    /**
-     * Data Provider: Non Camel case values
-     * 
-     * @returns array
-     */
-    private function dataProviderNonCamelCaseValues(): array
-    {
-        return [
-            ["kebab-case"],
-            ["Camel_Snake_Case"],
-            ["snake_case"],
-            ["Train-Case"],
-            ["CamelCaps"],
-            ["UPPERFLATCASE"],
-            ["flatcase"],
-            ["snake__case_with_too_many_underscores"],
-        ];
-    }
-    
-    /**
-     * Test: Camel Case Validator Captures Validation Errors
-     * 
-     * @dataProvider dataProviderNonCamelCaseValues
-     *
-     * @param mixed $value
-     *
-     * @returns void
-     */
-    public function testCamelCaseValdidatorCapturesValidationErrors(mixed $value): void
-    {
-        $Stub = new Stub;
-        $Stub->camelcase = $value;
-
-        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
-        $this->assertSame(1, $Stub->getValidationErrors('camelcase')->count());
-        
-        
-        $this->assertSame("Value is not in camel case (camelCase)", $Stub->getValidationErrors('camelcase')->first()->error);
-    }
-
-    /**
-     * Data Provider: Camel Case Values
-     * 
-     * @returns array
-     */
-    private function dataProviderCamelCaseValues(): array
-    {
-        return [
-            ["camelCase"],
-            ["testSomeMethod"],
-            ["reallyLongCamelCase"]
-        ];
-    }
-    
-    /**
-     * Test: Camel Case Validators Passes For valid Camel case values
-     * 
-     * @dataProvider dataProviderCamelCaseValues
-     *
-     * @param mixed
-     *
-     * @returns void
-     */
-    public function testCamelCaseValidatorsPassesForValidCobolcaseValues(mixed $value): void
-    {
-        $Stub = new Stub;
-        $Stub->camelcase = $value;
-
-        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
-        $this->assertCount(0, $Stub->getValidationErrors());
-    }
-
-    /**
-     * Data Provider: Non Pascal case values
-     * 
-     * @returns array
-     */
-    private function dataProviderNonPascalCaseValues(): array
-    {
-        return [
-            ["kebab-case"],
-            ["Camel_Snake_Case"],
-            ["snake_case"],
-            ["Train-Case"],
-            ["camelCaps"],
-            ["UPPERFLATCASE"],
-            ["flatcase"],
-            ["snake__case_with_too_many_underscores"],
-        ];
-    }
-    
-    /**
-     * Test: Pascal Case Validator Captures Validation Errors
-     * 
-     * @dataProvider dataProviderNonPascalCaseValues
-     *
-     * @param mixed $value
-     *
-     * @returns void
-     */
-    public function testPascalCaseValdidatorCapturesValidationErrors(mixed $value): void
-    {
-        $Stub = new Stub;
-        $Stub->pascalcase = $value;
-        $Stub->camelcaps = $value;
-        $Stub->studlycaps = $value;
-
-        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
-        $this->assertSame(1, $Stub->getValidationErrors('pascalcase')->count());
-        $this->assertSame(1, $Stub->getValidationErrors('camelcaps')->count());
-        $this->assertSame(1, $Stub->getValidationErrors('studlycaps')->count());
-        
-        
-        $this->assertSame("Value is not in Pascal case (PascalCase)", $Stub->getValidationErrors('pascalcase')->first()->error);
-        $this->assertSame("Value is not in Pascal case (PascalCase)", $Stub->getValidationErrors('camelcaps')->first()->error);
-        $this->assertSame("Value is not in Pascal case (PascalCase)", $Stub->getValidationErrors('studlycaps')->first()->error);
-    }
-
-    /**
-     * Data Provider: Pascal Case Values
-     * 
-     * @returns array
-     */
-    private function dataProviderPascalCaseValues(): array
-    {
-        return [
-            ["PascalCase"],
-            ["ACatIsATerriblePet"],
-            ["ADogIs100TimesBetterThanACat"]
-        ];
-    }
-    
-    /**
-     * Test: Pascal Case Validators Passes For valid Pascal case values
-     * 
-     * @dataProvider dataProviderPascalCaseValues
-     *
-     * @param mixed
-     *
-     * @returns void
-     */
-    public function testPascalCaseValidatorsPassesForValidCobolcaseValues(mixed $value): void
-    {
-        $Stub = new Stub;
-        $Stub->pascalcase = $value;
-        $Stub->camelcaps = $value;
-        $Stub->studlycaps = $value;
-
-        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
-        $this->assertCount(0, $Stub->getValidationErrors());
     }
 }
