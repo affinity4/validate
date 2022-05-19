@@ -237,6 +237,21 @@ Validates a string is PascalCase (aka CamelCaps, aka StudlyCaps, aka CapitalCase
 // or @validation type(string:capitalcase)
 ```
 
+### traincase
+
+**NOTE: Strings only**  
+Validates a string is Train-Case
+
+| Value           | Status  |
+| --------------- | ------- |
+| "COBOL-CASE"    | Fail    |
+| "camelCase"     | Fail    |
+| "Train-Case"    | Pass    |
+
+```php
+@validation type(string:traincase)
+```
+
 ### Unsiged
 
 Validates an integer is a positive value, above 0

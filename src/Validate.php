@@ -6,8 +6,6 @@ use \phpDocumentor\Reflection\DocBlockFactory;
 use \ReflectionClass;
 use Exception;
 
-use function PHPSTORM_META\map;
-
 trait Validate
 {
     public $__validate__class;
@@ -39,6 +37,7 @@ trait Validate
         'after.string:cobolcase|upperkebabcase' => '/^[A-Z0-9]+(?:-[A-Z0-9]+)+/',
         'after.string:camelcase'    => '/^[a-z]+(?:[A-Z]{1}[a-z]{1}[a-zA-Z0-9]*)+$/',
         'after.string:pascalcase|camelcaps|studlycaps|capitalcase' => '/^[A-Z]+[a-z]*[0-9]*(?:[A-Z]{1}[a-z]{1}[a-zA-Z0-9]*)+$/',
+        'after.string:traincase'    => '/^(?:(?:[A-Z]-)|(?:[A-Z][a-z]+-)|(?:[0-9]+-)|(?:[A-Z][0-9]+-))(?:(?:[A-Z])|(?:[A-Z][0-9]+)|(?:[A-Z][a-z]+)|(?:[0-9])|(?:[A-Z][a-z]+[0-9]+))(?:(?:-[A-Z])|(?:-[A-Z][a-z]+)|(?:-[0-9]+))*$/',
     ];
 
     private $__validate__validation_errors_messages = [
@@ -58,6 +57,7 @@ trait Validate
         'after.string:cobolcase|upperkebabcase' => "Value is not in cobol case (COBOL-CASE)",
         'after.string:camelcase'    => "Value is not in camel case (camelCase)",
         'after.string:pascalcase|camelcaps|studlycaps|capitalcase' => "Value is not in Pascal case (PascalCase)",
+        'after.string:traincase'    => 'Value is not in train case (Train-Case)'
     ];
 
     /**
@@ -573,6 +573,20 @@ trait Validate
 
             if (empty($matches)) {
                 $this->addValidationError($this->__validate__validation_errors_messages['after.string:pascalcase|camelcaps|studlycaps|capitalcase'], $value, $validators);
+            }
+
+            return $value;
+        });
+
+        /* ----------------------------------------
+         * after.string:traincase
+         * ----------------------------------------
+         */
+        $this->addValidationRule('after.string:traincase', function(array $validators, mixed $value) {
+            preg_match($this->__validate__regex_patterns['after.string:traincase'], $value, $matches);
+
+            if (empty($matches)) {
+                $this->addValidationError($this->__validate__validation_errors_messages['after.string:traincase'], $value, $validators);
             }
 
             return $value;

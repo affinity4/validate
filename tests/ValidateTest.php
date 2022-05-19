@@ -786,6 +786,85 @@ final class ValidateTest extends TestCase
         $this->assertCount(0, $Stub->getValidationErrors());
     }
 
+    /* ----------------------------------------- */
+    /*      string:traincase Validator Tests     */
+    /* ----------------------------------------- */
+
+    /**
+     * Data Provider: Non Train case values
+     * 
+     * @returns array
+     */
+    private function dataProviderNonTrainCaseValues(): array
+    {
+        return [
+            ["kebab-case"],
+            ["Camel_Snake_Case"],
+            ["snake_case"],
+            ["camelCaps"],
+            ["UPPERFLATCASE"],
+            ["flatcase"],
+            ["snake__case_with_too_many_underscores"],
+        ];
+    }
+    
+    /**
+     * Test: Train Case Validator Captures Validation Errors
+     * 
+     * @dataProvider dataProviderNonTrainCaseValues
+     *
+     * @param mixed $value
+     *
+     * @returns void
+     */
+    public function testTrainCaseValdidatorCapturesValidationErrors(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->traincase = $value;
+
+        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertSame(1, $Stub->getValidationErrors('traincase')->count());
+        
+        
+        $this->assertSame("Value is not in train case (Train-Case)", $Stub->getValidationErrors('traincase')->first()->error);
+    }
+
+    /**
+     * Data Provider: Train Case Values
+     * 
+     * @returns array
+     */
+    private function dataProviderTrainCaseValues(): array
+    {
+        return [
+            ["A-Train"],
+            ["7-O-Clock"],
+            ["Train-Arrives-At-7"],
+            ["At-7-O-Clock"],
+            ["Train-Case"],
+            ["A-Long-Train"],
+            ["A-Dog-Is-100-Times-Better-Than-A-Cat"]
+        ];
+    }
+    
+    /**
+     * Test: Train Case Validators Passes For valid Train case values
+     * 
+     * @dataProvider dataProviderTrainCaseValues
+     *
+     * @param mixed
+     *
+     * @returns void
+     */
+    public function testTrainCaseValidatorsPassesForValidCobolcaseValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->traincase = $value;
+
+        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertCount(0, $Stub->getValidationErrors());
+    }
+
     /* --------------------------------- */
     /*      numeric Validator Tests      */
     /* --------------------------------- */

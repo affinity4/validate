@@ -257,6 +257,15 @@ class Stub
     protected $capitalcase;
 
     /**
+    * Train-Case
+    *
+    * @validation type(string:traincase)
+    * 
+    * @var string
+    */
+   protected $traincase;
+
+    /**
      * Get ID
      *
      * @return integer
