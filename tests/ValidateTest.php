@@ -736,16 +736,19 @@ final class ValidateTest extends TestCase
         $Stub->pascalcase = $value;
         $Stub->camelcaps = $value;
         $Stub->studlycaps = $value;
+        $Stub->capitalcase = $value;
 
         $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
         $this->assertSame(1, $Stub->getValidationErrors('pascalcase')->count());
         $this->assertSame(1, $Stub->getValidationErrors('camelcaps')->count());
         $this->assertSame(1, $Stub->getValidationErrors('studlycaps')->count());
+        $this->assertSame(1, $Stub->getValidationErrors('capitalcase')->count());
         
         
         $this->assertSame("Value is not in Pascal case (PascalCase)", $Stub->getValidationErrors('pascalcase')->first()->error);
         $this->assertSame("Value is not in Pascal case (PascalCase)", $Stub->getValidationErrors('camelcaps')->first()->error);
         $this->assertSame("Value is not in Pascal case (PascalCase)", $Stub->getValidationErrors('studlycaps')->first()->error);
+        $this->assertSame("Value is not in Pascal case (PascalCase)", $Stub->getValidationErrors('capitalcase')->first()->error);
     }
 
     /**
@@ -777,6 +780,7 @@ final class ValidateTest extends TestCase
         $Stub->pascalcase = $value;
         $Stub->camelcaps = $value;
         $Stub->studlycaps = $value;
+        $Stub->capitalcase = $value;
 
         $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
         $this->assertCount(0, $Stub->getValidationErrors());

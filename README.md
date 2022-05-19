@@ -219,10 +219,10 @@ Validates a string is camelCase
 @validation type(string:camelcase)
 ```
 
-### pascalcase/camelcaps/studlycaps
+### pascalcase/camelcaps/studlycaps/capitalcase
 
 **NOTE: Strings only**  
-Validates a string is PascalCase (aka CamelCaps, aka StudlyCaps)
+Validates a string is PascalCase (aka CamelCaps, aka StudlyCaps, aka CapitalCase)
 
 | Value           | Status  |
 | --------------- | ------- |
@@ -234,6 +234,7 @@ Validates a string is PascalCase (aka CamelCaps, aka StudlyCaps)
 @validation type(string:pascalcase)
 // or @validation type(string:camelcaps)
 // or @validation type(string:studlycaps)
+// or @validation type(string:capitalcase)
 ```
 
 ### Unsiged
@@ -436,8 +437,6 @@ $PasswordValidationErrors->first()->value; // 'password'
 
 ## TODO
 
-1. Add type(string:uppercase) aka camelcaps
-1. Add type(string:capitalcase) aka camelcaps
 1. Add type(string:traincase) Train-Case
 1. Add type(string:uppercase)
 1. Add type(string:lowercase)

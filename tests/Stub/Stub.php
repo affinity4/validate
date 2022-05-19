@@ -248,6 +248,15 @@ class Stub
     protected $camelcaps;
 
     /**
+     * CapitalCase
+     *
+     * @validation type(string:capitalcase)
+     * 
+     * @var string
+     */
+    protected $capitalcase;
+
+    /**
      * Get ID
      *
      * @return integer

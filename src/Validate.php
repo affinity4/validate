@@ -38,7 +38,7 @@ trait Validate
         'after.string:kebabcase'    => '/^[a-z0-9]+(?:-[a-z0-9]+)+/',
         'after.string:cobolcase|upperkebabcase' => '/^[A-Z0-9]+(?:-[A-Z0-9]+)+/',
         'after.string:camelcase'    => '/^[a-z]+(?:[A-Z]{1}[a-z]{1}[a-zA-Z0-9]*)+$/',
-        'after.string:pascalcase|camelcaps|studlycaps' => '/^[A-Z]+[a-z]*[0-9]*(?:[A-Z]{1}[a-z]{1}[a-zA-Z0-9]*)+$/',
+        'after.string:pascalcase|camelcaps|studlycaps|capitalcase' => '/^[A-Z]+[a-z]*[0-9]*(?:[A-Z]{1}[a-z]{1}[a-zA-Z0-9]*)+$/',
     ];
 
     private $__validate__validation_errors_messages = [
@@ -57,7 +57,7 @@ trait Validate
         'after.string:kebabcase'    => "Value is not in kebabcase (kebab-case)",
         'after.string:cobolcase|upperkebabcase' => "Value is not in cobol case (COBOL-CASE)",
         'after.string:camelcase'    => "Value is not in camel case (camelCase)",
-        'after.string:pascalcase|camelcaps|studlycaps' => "Value is not in Pascal case (PascalCase)",
+        'after.string:pascalcase|camelcaps|studlycaps|capitalcase' => "Value is not in Pascal case (PascalCase)",
     ];
 
     /**
@@ -565,14 +565,14 @@ trait Validate
         });
 
         /* ----------------------------------------
-         * after.string:pascalcase|camelcaps|studlycaps
+         * after.string:pascalcase|camelcaps|studlycaps|capitalcase
          * ----------------------------------------
          */
-        $this->addValidationRule('after.string:pascalcase|camelcaps|studlycaps', function(array $validators, mixed $value) {
-            preg_match($this->__validate__regex_patterns['after.string:pascalcase|camelcaps|studlycaps'], $value, $matches);
+        $this->addValidationRule('after.string:pascalcase|camelcaps|studlycaps|capitalcase', function(array $validators, mixed $value) {
+            preg_match($this->__validate__regex_patterns['after.string:pascalcase|camelcaps|studlycaps|capitalcase'], $value, $matches);
 
             if (empty($matches)) {
-                $this->addValidationError($this->__validate__validation_errors_messages['after.string:pascalcase|camelcaps|studlycaps'], $value, $validators);
+                $this->addValidationError($this->__validate__validation_errors_messages['after.string:pascalcase|camelcaps|studlycaps|capitalcase'], $value, $validators);
             }
 
             return $value;
