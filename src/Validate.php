@@ -6,6 +6,8 @@ use \phpDocumentor\Reflection\DocBlockFactory;
 use \ReflectionClass;
 use Exception;
 
+use function PHPSTORM_META\map;
+
 trait Validate
 {
     public $__validate__class;
@@ -25,7 +27,47 @@ trait Validate
      */
     private $validation_errors = [];
 
-    private function __validate__ShouldValidate(\ReflectionProperty $ReflectionProperty)
+    private $__validate__regex_patterns = [
+        '@validation.type'          => "/^type\((?P<type>int|string|float|numeric)(:(?P<validators>.*))?(,\s*(?P<length>\d+))?\)/",
+        '@validation.match'         => "/^match\((?P<pattern>.*)\)/",
+        '@validation.replace'       => "/^replace\((?P<pattern>.*),\s*(?P<replace>.*)\)/",
+        'valid_validation_types'    => "/^(?P<validation_type>type|match|replace|any)\(/",
+        'float_validator.format'    => '/\d+\.(?P<decimal_places>\d%s)$/',
+        'after.string:snakecase'    => '/^[a-z0-9]+(?:_[a-z0-9]+)+/',
+        'after.string:constantcase|uppersnakecase|macrocase' => '/^[A-Z0-9]+(?:_[A-Z0-9]+)+/',
+        'after.string:kebabcase'    => '/^[a-z0-9]+(?:-[a-z0-9]+)+/',
+        'after.string:cobolcase|upperkebabcase' => '/^[A-Z0-9]+(?:-[A-Z0-9]+)+/',
+        'after.string:camelcase'    => '/^[a-z]+(?:[A-Z]{1}[a-z]{1}[a-zA-Z0-9]*)+$/',
+        'after.string:pascalcase|camelcaps|studlycaps' => '/^[A-Z]+[a-z]*[0-9]*(?:[A-Z]{1}[a-z]{1}[a-zA-Z0-9]*)+$/',
+    ];
+
+    private $__validate__validation_errors_messages = [
+        'string'                    => "Value is not a string",
+        'after.string:alnum|alphanum|alphanumeric' => "Value is not alphanumeric (letters and numbers only)",
+        'int'                       => "Value is not an integer",
+        'after.int:unsigned'        => "Value must be unsigned (a positive number)",
+        'after.int:unsigned.length.format' => "Max value is %s",
+        'float'                     => "Value is not a float",
+        'float.decimal.format'      => 'Floats must have exactly %1$s %2$s',
+        'nuumeric'                  => "Value is not numeric",
+        'match'                     => "Value is not a match",
+        'after.string:alpha'        => "value is not alphabet characters only",
+        'after.string:snakecase'    => "Value is not in snakecase (snake_case)",
+        'after.string:constantcase|uppersnakecase|macrocase' => "Value is not in constantcase (CONSTANT_CASE)",
+        'after.string:kebabcase'    => "Value is not in kebabcase (kebab-case)",
+        'after.string:cobolcase|upperkebabcase' => "Value is not in cobol case (COBOL-CASE)",
+        'after.string:camelcase'    => "Value is not in camel case (camelCase)",
+        'after.string:pascalcase|camelcaps|studlycaps' => "Value is not in Pascal case (PascalCase)",
+    ];
+
+    /**
+     * Should Validate
+     *
+     * @param \ReflectionProperty $ReflectionProperty
+     * 
+     * @return bool
+     */
+    private function __validate__ShouldValidate(\ReflectionProperty $ReflectionProperty): bool
     {
         $DocBlockFactory = DocBlockFactory::createInstance();
         $DocBlockParser = $DocBlockFactory->create($ReflectionProperty->getDocComment());
@@ -33,6 +75,13 @@ trait Validate
         return $DocBlockParser->hasTag('validation');
     }
 
+    /**
+     * Get Validations From Validation Tags
+     *
+     * @param [type] $ValidationTags
+     * 
+     * @return array
+     */
     private function __validate__getValidationsFromValidationTags($ValidationTags): array
     {
         $validations = [];
@@ -43,6 +92,13 @@ trait Validate
         return $validations;
     }
 
+    /**
+     * Get validations
+     *
+     * @param \ReflectionProperty $ReflectionProperty
+     * 
+     * @return array
+     */
     private function __validate__getValidations(\ReflectionProperty $ReflectionProperty): array
     {
         $DocBlockFactory = DocBlockFactory::createInstance();
@@ -52,9 +108,17 @@ trait Validate
         return $this->__validate__getValidationsFromValidationTags($ValidationTags);
     }
 
+    /**
+     * Get Type Validators Array
+     *
+     * @param string $validation
+     * @param \ReflectionProperty $ReflectionProperty
+     * 
+     * @return array
+     */
     private function __validate__getTypeValidatorArray(string $validation, \ReflectionProperty $ReflectionProperty): array
     {
-        preg_match("/^type\((?P<type>int|string|float|numeric)(:(?P<validators>.*))?(,\s*(?P<length>\d+))?\)/mi", $validation, $matches);
+        preg_match($this->__validate__regex_patterns['@validation.type'], $validation, $matches);
 
         if (empty($matches)) {
             throw new ValidationPropertyParserException("@validation property was not formatted correctly");
@@ -73,9 +137,17 @@ trait Validate
         return ['type' => $type, 'validators' => $_validators, 'length' => $length, '_ReflectionProperty' => $ReflectionProperty];
     }
 
+    /**
+     * Get Match Validator Array
+     *
+     * @param string $validation
+     * @param \ReflectionProperty $ReflectionProperty
+     * 
+     * @return array
+     */
     private function __validate__getMatchValidatorArray(string $validation, \ReflectionProperty $ReflectionProperty): array
     {
-        preg_match("/^match\((?P<pattern>.*)\)/", $validation, $matches);
+        preg_match($this->__validate__regex_patterns['@validation.match'], $validation, $matches);
 
         $pattern = (array_key_exists('pattern', $matches)) ? $matches['pattern'] : '';
         if (empty($pattern)) {
@@ -90,9 +162,17 @@ trait Validate
         ];
     }
 
+    /**
+     * Get Replace Validator Array
+     *
+     * @param string $validation
+     * @param \ReflectionProperty $ReflectionProperty
+     * 
+     * @return array
+     */
     private function __validate__getReplaceValidatorArray(string $validation, \ReflectionProperty $ReflectionProperty): array
     {
-        preg_match("/^replace\((?P<pattern>.*),\s*(?P<replace>.*)\)/", $validation, $matches);
+        preg_match($this->__validate__regex_patterns['@validation.replace'], $validation, $matches);
 
         $pattern = (array_key_exists('pattern', $matches)) ? $matches['pattern'] : '';
         if (empty($pattern)) {
@@ -113,13 +193,19 @@ trait Validate
         ];
     }
 
+    /**
+     * Get Validators
+     *
+     * @param \ReflectionProperty $ReflectionProperty
+     * 
+     * @return array
+     */
     private function __validate__getValidators(\ReflectionProperty $ReflectionProperty): array
     {
         $validations = $this->__validate__getValidations($ReflectionProperty);
             $validators = [];
             foreach ($validations as $validation) {
-                $valid_validation_types = "type|match|replace|any";
-                preg_match("/^(?P<validation_type>$valid_validation_types)\(/", $validation, $matches);
+                preg_match($this->__validate__regex_patterns['valid_validation_types'], $validation, $matches);
                 $validation_type = (array_key_exists('validation_type', $matches)) ? $matches['validation_type'] : null;
 
                 // Here we are simply populating the $validators array which is what gets passed to the validation_rules callbacks as the first argument
@@ -134,7 +220,7 @@ trait Validate
                         $validators[] = $this->__validate__getReplaceValidatorArray($validation, $ReflectionProperty);
                     break;
                     default :
-                        throw new ValidationPropertyParserException("@validation property was not formatted correctly. Please ensure main validation function is one of $valid_validation_types");
+                        throw new ValidationPropertyParserException("@validation property was not formatted correctly. Please ensure main validation function is one of type|match|replace|any");
                     break;
                 }
             }
@@ -262,8 +348,8 @@ trait Validate
          */
         $this->addValidationRule('string', function(array $validator, mixed $value) {
             if (!is_string($value)) {
-                $expected_type = $validator['type'];
-                $this->addValidationError("Must be of type $expected_type", $value, $validator);
+                
+                $this->addValidationError($this->__validate__validation_errors_messages['string'], $value, $validator);
             }
 
             return $value;
@@ -305,7 +391,7 @@ trait Validate
          */
         $this->addValidationRule('after.string:alnum|alphanum|alphanumeric', function(array $validator, string $value) {
             if (!ctype_alnum($value)) {
-                $this->addValidationError("Value must be alphanumeric (letters and numbers only)", $value, $validator);
+                $this->addValidationError($this->__validate__validation_errors_messages['after.string:alnum|alphanum|alphanumeric'], $value, $validator);
             }
 
             return $value;
@@ -318,7 +404,7 @@ trait Validate
         $this->addValidationRule('int', function(array $validator, mixed $value) {
             if (is_string($value) || !is_int($value)) {
                 $expected_type = $validator['type'];
-                $this->addValidationError("Must be of type $expected_type", $value, $validator);
+                $this->addValidationError($this->__validate__validation_errors_messages['int'], $value, $validator);
             }
 
             return $value;
@@ -345,13 +431,17 @@ trait Validate
          */
         $this->addValidationRule('after.int:unsigned', function(array $validator, int $value) {
             if (!(abs($value) === $value)) {
-                $this->addValidationError("Value must be unsigned (a positive number)", $value, $validator);
+                $this->addValidationError($this->__validate__validation_errors_messages['after.int:unsigned'], $value, $validator);
             }
 
             $length = $validator['length'];
             if ($length !== null) {
                 if ($value > $length) {
-                    $this->addValidationError("Max value is $length", $value, $validator);
+                    $this->addValidationError(
+                        sprintf($this->__validate__validation_errors_messages['after.int:unsigned.length.format'], $length), 
+                        $value, 
+                        $validator
+                    );
                 }
             }
 
@@ -364,15 +454,15 @@ trait Validate
          */
         $this->addValidationRule('float', function(array $validators, mixed $value) {
             if (!is_float($value)) {
-                $this->addValidationError("Type must be float", $value, $validators);
+                $this->addValidationError($this->__validate__validation_errors_messages['float'], $value, $validators);
             } else {
                 $length = $validators['length'];
                 $decimal_places = 'decimal_places';
-                $pattern = "/\d+\.(?P<$decimal_places>\d{$length})$/";
+                $pattern = sprintf($this->__validate__regex_patterns['float_validator.format'], $length);
                 preg_match($pattern, $value, $matches);
                 if (array_key_exists($decimal_places, $matches)) {
                     if ((int) $matches[$decimal_places] !== (int) $length) {
-                        $this->addValidationError("Must have exactly $length $decimal_places", $value, $validators);
+                        $this->addValidationError(sprintf($this->__validate__validation_errors_messages['float.decimal.format'], $length, $decimal_places), $value, $validators);
                     }    
                 }
             }
@@ -386,7 +476,7 @@ trait Validate
          */
         $this->addValidationRule('numeric', function(array $validators, mixed $value) {
             if (!is_numeric($value)) {
-                $this->addValidationError("Type must be numeric", $value, $validators);
+                $this->addValidationError($this->__validate__validation_errors_messages['numeric'], $value, $validators);
             }
 
             return $value;
@@ -398,7 +488,7 @@ trait Validate
          */
         $this->addValidationRule('after.string:alpha', function(array $validators, mixed $value) {
             if (!ctype_alpha($value)) {
-                $this->addValidationError("Type must be alphabet characters only", $value, $validators);
+                $this->addValidationError($this->__validate__validation_errors_messages['after.string:alpha'], $value, $validators);
             }
 
             return $value;
@@ -409,10 +499,10 @@ trait Validate
          * ----------------------------------------
          */
         $this->addValidationRule('after.string:snakecase', function(array $validators, mixed $value) {
-            preg_match('/^[a-z0-9]+(?:_[a-z0-9]+)+/', $value, $matches);
+            preg_match($this->__validate__regex_patterns['after.string:snakecase'], $value, $matches);
 
             if (empty($matches)) {
-                $this->addValidationError("Value was not in snakecase (snake_case)", $value, $validators);
+                $this->addValidationError($this->__validate__validation_errors_messages['after.string:snakecase'], $value, $validators);
             }
 
             return $value;
@@ -423,10 +513,10 @@ trait Validate
          * ----------------------------------------
          */
         $this->addValidationRule('after.string:constantcase|uppersnakecase|macrocase', function(array $validators, mixed $value) {
-            preg_match('/^[A-Z0-9]+(?:_[A-Z0-9]+)+/', $value, $matches);
+            preg_match($this->__validate__regex_patterns['after.string:constantcase|uppersnakecase|macrocase'], $value, $matches);
 
             if (empty($matches)) {
-                $this->addValidationError("Value was not in constantcase (CONSTANT_CASE)", $value, $validators);
+                $this->addValidationError($this->__validate__validation_errors_messages['after.string:constantcase|uppersnakecase|macrocase'], $value, $validators);
             }
 
             return $value;
@@ -437,10 +527,10 @@ trait Validate
          * ----------------------------------------
          */
         $this->addValidationRule('after.string:kebabcase', function(array $validators, mixed $value) {
-            preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)+/', $value, $matches);
+            preg_match($this->__validate__regex_patterns['after.string:kebabcase'], $value, $matches);
 
             if (empty($matches)) {
-                $this->addValidationError("Value was not in kebabcase (kebab-case)", $value, $validators);
+                $this->addValidationError($this->__validate__validation_errors_messages['after.string:kebabcase'], $value, $validators);
             }
 
             return $value;
@@ -451,14 +541,43 @@ trait Validate
          * ----------------------------------------
          */
         $this->addValidationRule('after.string:cobolcase|upperkebabcase', function(array $validators, mixed $value) {
-            preg_match('/^[A-Z0-9]+(?:-[A-Z0-9]+)+/', $value, $matches);
+            preg_match($this->__validate__regex_patterns['after.string:cobolcase|upperkebabcase'], $value, $matches);
 
             if (empty($matches)) {
-                $this->addValidationError("Value was not in cobol case (COBOL-CASE)", $value, $validators);
+                $this->addValidationError($this->__validate__validation_errors_messages['after.string:cobolcase|upperkebabcase'], $value, $validators);
             }
 
             return $value;
         });
+
+        /* ----------------------------------------
+         * after.string:camelcase
+         * ----------------------------------------
+         */
+        $this->addValidationRule('after.string:camelcase', function(array $validators, mixed $value) {
+            preg_match($this->__validate__regex_patterns['after.string:camelcase'], $value, $matches);
+
+            if (empty($matches)) {
+                $this->addValidationError($this->__validate__validation_errors_messages['after.string:camelcase'], $value, $validators);
+            }
+
+            return $value;
+        });
+
+        /* ----------------------------------------
+         * after.string:pascalcase|camelcaps|studlycaps
+         * ----------------------------------------
+         */
+        $this->addValidationRule('after.string:pascalcase|camelcaps|studlycaps', function(array $validators, mixed $value) {
+            preg_match($this->__validate__regex_patterns['after.string:pascalcase|camelcaps|studlycaps'], $value, $matches);
+
+            if (empty($matches)) {
+                $this->addValidationError($this->__validate__validation_errors_messages['after.string:pascalcase|camelcaps|studlycaps'], $value, $validators);
+            }
+
+            return $value;
+        });
+        
 
         /* ----------------------------------------
          * match($pattern)
@@ -469,7 +588,7 @@ trait Validate
             preg_match($pattern, $value, $matches);
 
             if (empty($matches)) {
-                $this->addValidationError("Value did not match pattern", $value, $validators);
+                $this->addValidationError($this->__validate__validation_errors_messages['match'], $value, $validators);
             }
 
             return $value;

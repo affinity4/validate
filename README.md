@@ -204,6 +204,38 @@ Validates a string is CONSTANT_CASE (aka UPPER_SNAKE_CASE)
 // or @validation type(string:uppersnakecase)
 ```
 
+### camelcase
+
+**NOTE: Strings only**  
+Validates a string is camelCase
+
+| Value           | Status  |
+| --------------- | ------- |
+| "snake_case"    | Fail    |
+| "PascalCase"    | Fail    |
+| "camelCase"     | Pass    |
+
+```php
+@validation type(string:camelcase)
+```
+
+### pascalcase/camelcaps/studlycaps
+
+**NOTE: Strings only**  
+Validates a string is PascalCase (aka CamelCaps, aka StudlyCaps)
+
+| Value           | Status  |
+| --------------- | ------- |
+| "snake_case"    | Fail    |
+| "camelCase"     | Fail    |
+| "PascalCase"    | Pass    |
+
+```php
+@validation type(string:pascalcase)
+// or @validation type(string:camelcaps)
+// or @validation type(string:studlycaps)
+```
+
 ### Unsiged
 
 Validates an integer is a positive value, above 0
@@ -404,11 +436,9 @@ $PasswordValidationErrors->first()->value; // 'password'
 
 ## TODO
 
-1. Add type(string:camelcase)
 1. Add type(string:camelcaps)
 1. Add type(string:uppercase) aka camelcaps
 1. Add type(string:capitalcase) aka camelcaps
-1. Add type(string:pascalcase) PascalCase (aka CamelCaps)
 1. Add type(string:traincase) Train-Case
 1. Add type(string:uppercase)
 1. Add type(string:lowercase)

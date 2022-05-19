@@ -1045,4 +1045,156 @@ final class ValidateTest extends TestCase
         $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
         $this->assertCount(0, $Stub->getValidationErrors());
     }
+
+    /**
+     * Data Provider: Non Camel case values
+     * 
+     * @returns array
+     */
+    private function dataProviderNonCamelCaseValues(): array
+    {
+        return [
+            ["kebab-case"],
+            ["Camel_Snake_Case"],
+            ["snake_case"],
+            ["Train-Case"],
+            ["CamelCaps"],
+            ["UPPERFLATCASE"],
+            ["flatcase"],
+            ["snake__case_with_too_many_underscores"],
+        ];
+    }
+    
+    /**
+     * Test: Camel Case Validator Captures Validation Errors
+     * 
+     * @dataProvider dataProviderNonCamelCaseValues
+     *
+     * @param mixed $value
+     *
+     * @returns void
+     */
+    public function testCamelCaseValdidatorCapturesValidationErrors(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->camelcase = $value;
+
+        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertSame(1, $Stub->getValidationErrors('camelcase')->count());
+        
+        
+        $this->assertSame("Value is not in camel case (camelCase)", $Stub->getValidationErrors('camelcase')->first()->error);
+    }
+
+    /**
+     * Data Provider: Camel Case Values
+     * 
+     * @returns array
+     */
+    private function dataProviderCamelCaseValues(): array
+    {
+        return [
+            ["camelCase"],
+            ["testSomeMethod"],
+            ["reallyLongCamelCase"]
+        ];
+    }
+    
+    /**
+     * Test: Camel Case Validators Passes For valid Camel case values
+     * 
+     * @dataProvider dataProviderCamelCaseValues
+     *
+     * @param mixed
+     *
+     * @returns void
+     */
+    public function testCamelCaseValidatorsPassesForValidCobolcaseValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->camelcase = $value;
+
+        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertCount(0, $Stub->getValidationErrors());
+    }
+
+    /**
+     * Data Provider: Non Pascal case values
+     * 
+     * @returns array
+     */
+    private function dataProviderNonPascalCaseValues(): array
+    {
+        return [
+            ["kebab-case"],
+            ["Camel_Snake_Case"],
+            ["snake_case"],
+            ["Train-Case"],
+            ["camelCaps"],
+            ["UPPERFLATCASE"],
+            ["flatcase"],
+            ["snake__case_with_too_many_underscores"],
+        ];
+    }
+    
+    /**
+     * Test: Pascal Case Validator Captures Validation Errors
+     * 
+     * @dataProvider dataProviderNonPascalCaseValues
+     *
+     * @param mixed $value
+     *
+     * @returns void
+     */
+    public function testPascalCaseValdidatorCapturesValidationErrors(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->pascalcase = $value;
+        $Stub->camelcaps = $value;
+        $Stub->studlycaps = $value;
+
+        $this->assertFalse($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertSame(1, $Stub->getValidationErrors('pascalcase')->count());
+        $this->assertSame(1, $Stub->getValidationErrors('camelcaps')->count());
+        $this->assertSame(1, $Stub->getValidationErrors('studlycaps')->count());
+        
+        
+        $this->assertSame("Value is not in Pascal case (PascalCase)", $Stub->getValidationErrors('pascalcase')->first()->error);
+        $this->assertSame("Value is not in Pascal case (PascalCase)", $Stub->getValidationErrors('camelcaps')->first()->error);
+        $this->assertSame("Value is not in Pascal case (PascalCase)", $Stub->getValidationErrors('studlycaps')->first()->error);
+    }
+
+    /**
+     * Data Provider: Pascal Case Values
+     * 
+     * @returns array
+     */
+    private function dataProviderPascalCaseValues(): array
+    {
+        return [
+            ["PascalCase"],
+            ["ACatIsATerriblePet"],
+            ["ADogIs100TimesBetterThanACat"]
+        ];
+    }
+    
+    /**
+     * Test: Pascal Case Validators Passes For valid Pascal case values
+     * 
+     * @dataProvider dataProviderPascalCaseValues
+     *
+     * @param mixed
+     *
+     * @returns void
+     */
+    public function testPascalCaseValidatorsPassesForValidCobolcaseValues(mixed $value): void
+    {
+        $Stub = new Stub;
+        $Stub->pascalcase = $value;
+        $Stub->camelcaps = $value;
+        $Stub->studlycaps = $value;
+
+        $this->assertTrue($Stub->isValid(), "Failed to assert \$Stub->isValid() returned false");
+        $this->assertCount(0, $Stub->getValidationErrors());
+    }
 }
