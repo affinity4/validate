@@ -80,8 +80,10 @@ The $validators are a pipe separated list of validations to happen after the $ty
 Validates property value is a string.
 NOTE: Integers will not pass this validation. Castable types (e.g. objects with __toString) will not pass this validation unless 'cast' is passed as a validator. See Cast section below
 
-123 = fail
-'123' = pass
+| Value | Status |
+| ----- | ------ |
+| 123   | Fail   |
+| '123' | Pass   |
 
 ```php
 @validation type(string)
@@ -92,8 +94,10 @@ NOTE: Integers will not pass this validation. Castable types (e.g. objects with 
 Validates property value is an integer.
 NOTE: Numeric strings will not pass this validation. Castable types (e.g. a callable returning an int) will not pass this validation unless 'cast' is passed as a validator. See Cast section below
 
-'123' = fail
-123 = pass
+| Value | Status |
+| ----- | ------ |
+| '123' | Fail   |
+| 123   | Pass   |
 
 ```php
 @validation type(int)
@@ -103,8 +107,10 @@ NOTE: Numeric strings will not pass this validation. Castable types (e.g. a call
 
 Valdiates a value is numeric
 
-"0x539" = fail
-"123"   = pass
+| Value   | Status  |
+| ------- | ------- |
+| "0x539" | Fail    |
+| "123"   | Pass    |
 
 ```php
 /**
@@ -122,9 +128,11 @@ Valdiates a value is numeric
 **NOTE: Strings only**  
 Validates a string is alphabet characters only (no numbers or symbols)
 
-"123"       = fail
-"alpha!"    = fail
-"abcDEF"    = pass
+| Value    | Status  |
+| -------- | ------- |
+| "123"    | Fail    |
+| "alpha!" | Fail    |
+| "abcDEF" | Pass    |
 
 ```php
 /**
@@ -139,11 +147,13 @@ Validates a string is alphabet characters only (no numbers or symbols)
 
 ### Alnum/Alphanum/Alphanumeric
 
-**Strings only**  
+**NOTE: Strings only**  
 Validates a string contains only alphanumeric characters (numbers and letters only)
 
-i-am-not-alnum  = fail
-iAmAlnum123     = pass
+| Value            | Status  |
+| ---------------- | ------- |
+| "i-am-not-alnum" | Fail    |
+| "iAmAlnum123"    | Pass    |
 
 ```php
 @validation type(string:alnum)
@@ -151,12 +161,57 @@ iAmAlnum123     = pass
 // or @validation type(string:alphanumeric)
 ```
 
+### snakecase
+
+**NOTE: Strings only**  
+Validates a string contains is snake_case
+
+| Value        | Status |
+| ------------ | ------ |
+| "kebab-case" | Fail   |
+| "snake_case" | Pass   |
+
+```php
+@validation type(string:snakecase)
+```
+
+### kebabcase
+
+**NOTE: Strings only**  
+Validates a string is kebab-case
+
+| Value        | Status  |
+| ------------ | ------- |
+| "snake_case" | Fail    |
+| "kebab-case" | Pass    |
+
+```php
+@validation type(string:kebabcase)
+```
+
+### constantcase/uppersnakecase
+
+**NOTE: Strings only**  
+Validates a string is CONSTANT_CASE (aka UPPER_SNAKE_CASE)
+
+| Value           | Status  |
+| --------------- | ------- |
+| "snake_case"    | Fail    |
+| "CONSTANT_CASE" | Pass    |
+
+```php
+@validation type(string:constantcase)
+// or @validation type(string:uppersnakecase)
+```
+
 ### Unsiged
 
 Validates an integer is a positive value, above 0
 
--123    = fail
-123     = pass
+| Value | Status  |
+| ----- | ------- |
+| -123  | Fail    |
+| 123   | Pass    |
 
 ```php
 @validation type(int:unsigned)
@@ -164,19 +219,29 @@ Validates an integer is a positive value, above 0
 
 ### Cast
 
-**Strings and Integers**  
+**NOTE: Strings and Integers only**  
 Will attempt to "cast" an invalid value to the correct type, if possible
 
 This will check if an object has a __toString method, or will attempt to retreive return values of callables as the desired type.
 
-NOTE: Cast happens before any validation occurs. You can think of it more like a before middleware.
+**NOTE: Cast happens before any validation occurs. You can think of it more like a before middleware.**
 
-type(int:cast)
-'123' -> 123
+#### Cast to int
 
-type(string:cast)
-false -> 'false'
-123 -> '123'
+`type(int:cast)`
+
+| From  | To  |
+| ----- | --- |
+| '123' | 123 |
+
+#### Cast to string
+
+`type(string:cast)`
+
+| From  | To      |
+| ----- | ------- |
+| false | 'false' |
+| 123   | '123'   |
 
 ```php
 /* 
